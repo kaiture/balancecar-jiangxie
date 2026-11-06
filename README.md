@@ -1,4 +1,4 @@
-# STM32 平衡车程序代码详解教程
+# STM32 平衡车程序代码详解教程（超详细版）
 
 > 基于《江协科技 平衡车入门教程》"06-平衡车程序优化"工程源码
 > 主控：STM32F103C8T6（72MHz Cortex-M3）· 标准外设库 · 串级 PID 控制
@@ -35,45 +35,17 @@
 3. **执行**：TIM2 输出 PWM，经驱动芯片控制两个带编码器的减速电机；
 4. **节拍**：TIM1 以 1kHz 中断作为整个系统的"心跳"，保证控制周期严格稳定。
 
-<svg viewBox="0 0 860 300" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="13">
-  <defs>
-    <marker id="ar" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
-      <path d="M0,0 L8,4 L0,8 z" fill="#0b6e99"/>
-    </marker>
-  </defs>
-  <rect x="20" y="110" width="130" height="60" rx="8" fill="#e8f4fa" stroke="#0b6e99" stroke-width="2"/>
-  <text x="85" y="135" text-anchor="middle" fill="#0b6e99" font-weight="bold">MPU6050</text>
-  <text x="85" y="155" text-anchor="middle" fill="#555">姿态角 Angle</text>
-  <rect x="200" y="30" width="150" height="60" rx="8" fill="#fff3e0" stroke="#e07b00" stroke-width="2"/>
-  <text x="275" y="55" text-anchor="middle" fill="#e07b00" font-weight="bold">速度环 SpeedPID</text>
-  <text x="275" y="75" text-anchor="middle" fill="#555">50ms · 输出→目标角度</text>
-  <rect x="200" y="110" width="150" height="60" rx="8" fill="#fff3e0" stroke="#e07b00" stroke-width="2"/>
-  <text x="275" y="135" text-anchor="middle" fill="#e07b00" font-weight="bold">直立环 AnglePID</text>
-  <text x="275" y="155" text-anchor="middle" fill="#555">10ms · 输出→PWM</text>
-  <rect x="200" y="190" width="150" height="60" rx="8" fill="#fff3e0" stroke="#e07b00" stroke-width="2"/>
-  <text x="275" y="215" text-anchor="middle" fill="#e07b00" font-weight="bold">转向环 TurnPID</text>
-  <text x="275" y="235" text-anchor="middle" fill="#555">50ms · 输出→差速</text>
-  <rect x="420" y="110" width="140" height="60" rx="8" fill="#f0f0f0" stroke="#888" stroke-width="2"/>
-  <text x="490" y="135" text-anchor="middle" font-weight="bold" fill="#333">合成 + 限幅</text>
-  <text x="490" y="155" text-anchor="middle" fill="#555">Left/RightPWM</text>
-  <rect x="610" y="110" width="110" height="60" rx="8" fill="#eaf7ea" stroke="#2e8b57" stroke-width="2"/>
-  <text x="665" y="135" text-anchor="middle" fill="#2e8b57" font-weight="bold">电机 ×2</text>
-  <text x="665" y="155" text-anchor="middle" fill="#555">带编码器</text>
-  <rect x="420" y="30" width="140" height="40" rx="8" fill="#f7e8f5" stroke="#a04c96" stroke-width="2"/>
-  <text x="490" y="56" text-anchor="middle" fill="#a04c96">编码器测速</text>
-  <rect x="20" y="190" width="130" height="60" rx="8" fill="#e8f4fa" stroke="#0b6e99" stroke-width="2"/>
-  <text x="85" y="215" text-anchor="middle" fill="#0b6e99" font-weight="bold">遥控指令</text>
-  <text x="85" y="235" text-anchor="middle" fill="#555">蓝牙 USART2</text>
-  <line x1="150" y1="140" x2="198" y2="140" stroke="#0b6e99" stroke-width="2" marker-end="url(#ar)"/>
-  <line x1="275" y1="90" x2="275" y2="108" stroke="#e07b00" stroke-width="2" marker-end="url(#ar)"/>
-  <line x1="350" y1="140" x2="418" y2="140" stroke="#e07b00" stroke-width="2" marker-end="url(#ar)"/>
-  <line x1="350" y1="220" x2="420" y2="165" stroke="#e07b00" stroke-width="2" marker-end="url(#ar)"/>
-  <line x1="560" y1="140" x2="608" y2="140" stroke="#888" stroke-width="2" marker-end="url(#ar)"/>
-  <line x1="665" y1="110" x2="530" y2="55" stroke="#a04c96" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#ar)"/>
-  <line x1="560" y1="50" x2="300" y2="52" stroke="#a04c96" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#ar)"/>
-  <line x1="150" y1="215" x2="240" y2="255" stroke="#888" stroke-width="1.5" stroke-dasharray="4,3"/>
-  <text x="200" y="285" fill="#888" font-size="12">虚线：编码器反馈 → 速度环/转向环</text>
-</svg>
+```mermaid
+flowchart LR
+    R[蓝牙摇杆<br>目标速度/转向] --> B
+    A["MPU6050<br>姿态角 Angle"] --> C
+    B["速度环 SpeedPID<br>50ms"] -- "输出→目标角度" --> C
+    C["直立环 AnglePID<br>10ms"] -- "AvePWM" --> E["合成+限幅<br>Left/RightPWM"]
+    T["转向环 TurnPID<br>50ms"] -- "DifPWM" --> E
+    E --> M["电机×2<br>带编码器"]
+    M -. "编码器反馈" .-> B
+    M -. "编码器反馈" .-> T
+```
 
 **为什么是"串级"？** 速度环的输出不是 PWM，而是**直立环的目标角度**。想让车前进，就先让它"往前倾"——倾角产生加速度，速度才会变化。外环（速度）慢（50ms）、内环（直立）快（10ms），外环的输出作为内环的设定值，这是工业控制中典型的串级结构。
 
@@ -437,6 +409,24 @@ void TIM1_UP_IRQHandler(void)
 
 原理：若中断体在 1ms 内跑完，更新标志已清，不会再次 SET；若**超过 1ms**，TIM1 已再次溢出、标志再次置位——在这里被逮个正着。`TimerCount` 读的是 ARR=999 的递增计数器当前值，配合断点可换算中断执行到此刻已经过去多少 µs。这是无示波器条件下检验实时性的土办法，非常值得学习。
 
+**中断调度全景图**：
+
+```mermaid
+flowchart TD
+    T["TIM1 更新中断 · 每 1ms"] --> K["Key_Tick 按键扫描"]
+    K --> C0{"Count0 ≥ 10 ?"}
+    C0 -- "是 → 10ms 分支" --> S1["读 MPU6050 → 扣零偏<br>atan2 解算 + 互补滤波<br>±50° 倒地保护"]
+    S1 --> RF{"RunFlag ?"}
+    RF -- "运行" --> S2["直立环 PID_Update<br>差速合成 + 限幅<br>Motor_SetPWM ×2"]
+    RF -- "停止" --> S3["Motor_SetPWM(…, 0)"]
+    C0 -- "否" --> C1{"Count1 ≥ 50 ?"}
+    S2 --> C1
+    S3 --> C1
+    C1 -- "是 → 50ms 分支" --> S4["Encoder_Get 读清零<br>速度换算 AveSpeed/DifSpeed<br>速度环输出→AnglePID.Target<br>转向环输出→DifPWM"]
+    C1 -- "否" --> D["尾部超时自检<br>TimerErrorFlag / TimerCount"]
+    S4 --> D
+```
+
 ---
 
 **本章思考**：
@@ -687,6 +677,23 @@ uint8_t MyI2C_ReceiveByte(void)
 Start → 1101000+0(0xD0) ACK → 寄存器地址 ACK → 数据 ACK → Stop
 ```
 
+```mermaid
+sequenceDiagram
+    participant M as MCU(主机)
+    participant S as MPU6050(从机)
+    M->>S: Start 起始
+    M->>S: 0xD0 (地址+写)
+    S-->>M: ACK
+    M->>S: 寄存器地址(设地址指针)
+    S-->>M: ACK
+    M->>S: 重复起始 Sr(不释放总线)
+    M->>S: 0xD1 (地址+读)
+    S-->>M: ACK
+    S->>M: 数据字节(前N-1个回ACK)
+    M->>S: NACK(最后一个字节)
+    M->>S: Stop 终止
+```
+
 ## 3.4 MPU6050 寄存器地图
 
 [MPU6050_Reg.h](file:///e:/BaiduNetdiskDownload/平衡车入门教程资料-江协/程序源码/程序源码-无注释版/平衡车程序/06-平衡车程序优化/Hardware/MPU6050_Reg.h) 定义了本工程用到的寄存器：
@@ -891,6 +898,20 @@ void Motor_SetPWM(uint8_t n, int8_t PWM)   // 注意入参是 int8_t：-128~127
 
 带磁环编码器的电机输出 A、B 两路脉冲。正转时 A 超前 B 90°，反转时 B 超前 A 90°——**相位关系编码了方向，边沿数量编码了距离**。
 
+```mermaid
+flowchart LR
+    subgraph FWD ["正转：A 超前 B 90°"]
+        direction LR
+        A1["A↑ +1"] --> A2["B↑ +1"] --> A3["A↓ +1"] --> A4["B↓ +1"]
+    end
+    subgraph REV ["反转：B 超前 A 90°"]
+        direction LR
+        B1["B↑ −1"] --> B2["A↑ −1"] --> B3["B↓ −1"] --> B4["A↓ −1"]
+    end
+    FWD -- "每个边沿都计数 → 4倍分辨率" --> CNT["计数器 CNT 增/减"]
+    REV --> CNT
+```
+
 "TI12 四倍频"（`TIM_EncoderMode_TI12`）：计数器在 **A 的上升沿、A 的下降沿、B 的上升沿、B 的下降沿**都计数一次。一圈的计数从"每相脉冲数"变为 4 倍，分辨率提高 4 倍；计数增减方向由硬件根据 A/B 相位自动判断——正转递增、反转递减，**软件完全不参与辨向**。
 
 ### 初始化逐行
@@ -1080,6 +1101,13 @@ void LED_OFF(void) { GPIO_SetBits(GPIOC, GPIO_Pin_13); }     // 拉高=灭
 显存层   OLED_DisplayBuf[8][128]  ← 128×64 屏的位图镜像，1KB
               │  OLED_Update() 时才批量发硬件
 传输层   软件 I2C（PB8=SCL, PB9=SDA，从机地址 0x78）
+```
+
+```mermaid
+flowchart TD
+    A["应用层<br>OLED_Printf / ShowNum / DrawLine …"] -- "只读写显存(µs级)" --> B["显存层<br>OLED_DisplayBuf[8][128] = 1KB"]
+    B -- "OLED_Update() 批量刷屏" --> C["传输层<br>软件I2C PB8/PB9 · 地址0x78"]
+    C --> D["SSD1306 控制器<br>128×64 点阵屏"]
 ```
 
 ### 6.3.1 显存的"页"结构（理解一切显示函数的钥匙）
