@@ -1,0 +1,1751 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>STM32 平衡车程序代码详解教程（超详细版）</title>
+<style>
+:root{--bg:#fbfbf9;--bg2:#f2f4f6;--ink:#1c2733;--muted:#5b6b7b;--rule:#dde3e8;
+--accent:#0b6e99;--accent2:#e07b00;--code-bg:#101820;--code-ink:#dbe7f0;}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);
+font-family:"Microsoft YaHei","PingFang SC","Segoe UI",sans-serif;
+font-size:16px;line-height:1.75}
+.wrap{max-width:960px;margin:0 auto;padding:0 24px 80px}
+.hero{background:linear-gradient(135deg,#0b3c55 0%,#0b6e99 60%,#1287b8 100%);
+color:#fff;padding:64px 24px 48px;margin-bottom:40px}
+.hero .wrap{padding-bottom:0}
+.hero h1{margin:0 0 14px;font-size:34px;line-height:1.3;letter-spacing:.02em}
+.hero p{margin:6px 0;color:#cfe6f2;font-size:15px}
+.hero .tags span{display:inline-block;background:rgba(255,255,255,.14);
+border:1px solid rgba(255,255,255,.25);border-radius:20px;
+padding:3px 14px;margin:4px 6px 0 0;font-size:13px}
+h2{font-size:26px;margin:64px 0 18px;padding-bottom:10px;border-bottom:3px solid var(--accent);color:var(--accent)}
+h3{font-size:20px;margin:36px 0 12px;color:#0d5473}
+h4{font-size:17px;margin:26px 0 10px;color:var(--ink)}
+p{margin:12px 0}
+strong{color:#0d4d6b}
+a{color:var(--accent)}
+ul,ol{padding-left:1.6em;margin:10px 0}
+li{margin:5px 0}
+blockquote{margin:18px 0;padding:12px 18px;background:#fff8ee;
+border-left:4px solid var(--accent2);border-radius:0 8px 8px 0;color:#6b5330}
+blockquote p{margin:4px 0}
+table{border-collapse:collapse;width:100%;margin:18px 0;font-size:14.5px;background:#fff}
+th{background:var(--accent);color:#fff;text-align:left;padding:9px 12px;font-weight:600}
+td{border:1px solid var(--rule);padding:8px 12px;vertical-align:top}
+tr:nth-child(even) td{background:var(--bg2)}
+code{font-family:Consolas,"Courier New",monospace;font-size:.9em;
+background:#eef2f5;border:1px solid var(--rule);border-radius:4px;padding:1px 6px;color:#0d4d6b}
+.codehilite,pre{background:var(--code-bg);color:var(--code-ink);border-radius:10px;
+padding:16px 18px;overflow-x:auto;margin:16px 0;line-height:1.55}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:13.5px}
+.codehilite{padding:0}
+.codehilite pre{margin:0;border-radius:10px}
+svg{max-width:100%;height:auto;display:block;margin:20px auto;background:#fff;
+border:1px solid var(--rule);border-radius:10px;padding:8px}
+hr{border:none;border-top:1px solid var(--rule);margin:48px 0}
+sup{font-size:.72em}
+@media print{
+ body{background:#fff}
+ .hero{background:#0b6e99!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ .codehilite,pre{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ h2{page-break-after:avoid}table,pre,svg{page-break-inside:avoid}
+}
+</style>
+<style>pre { line-height: 125%; }
+td.linenos .normal { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
+span.linenos { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
+td.linenos .special { color: #000000; background-color: #ffffc0; padding-left: 5px; padding-right: 5px; }
+span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 5px; padding-right: 5px; }
+.codehilite .hll { background-color: #49483e }
+.codehilite { background: #272822; color: #F8F8F2 }
+.codehilite .c { color: #959077 } /* Comment */
+.codehilite .err { color: #ED007E; background-color: #1E0010 } /* Error */
+.codehilite .esc { color: #F8F8F2 } /* Escape */
+.codehilite .g { color: #F8F8F2 } /* Generic */
+.codehilite .k { color: #66D9EF } /* Keyword */
+.codehilite .l { color: #AE81FF } /* Literal */
+.codehilite .n { color: #F8F8F2 } /* Name */
+.codehilite .o { color: #FF4689 } /* Operator */
+.codehilite .x { color: #F8F8F2 } /* Other */
+.codehilite .p { color: #F8F8F2 } /* Punctuation */
+.codehilite .ch { color: #959077 } /* Comment.Hashbang */
+.codehilite .cm { color: #959077 } /* Comment.Multiline */
+.codehilite .cp { color: #959077 } /* Comment.Preproc */
+.codehilite .cpf { color: #959077 } /* Comment.PreprocFile */
+.codehilite .c1 { color: #959077 } /* Comment.Single */
+.codehilite .cs { color: #959077 } /* Comment.Special */
+.codehilite .gd { color: #FF4689 } /* Generic.Deleted */
+.codehilite .ge { color: #F8F8F2; font-style: italic } /* Generic.Emph */
+.codehilite .ges { color: #F8F8F2; font-weight: bold; font-style: italic } /* Generic.EmphStrong */
+.codehilite .gr { color: #FF4689 } /* Generic.Error */
+.codehilite .gh { color: #F8F8F2 } /* Generic.Heading */
+.codehilite .gi { color: #A6E22E } /* Generic.Inserted */
+.codehilite .go { color: #66D9EF } /* Generic.Output */
+.codehilite .gp { color: #FF4689; font-weight: bold } /* Generic.Prompt */
+.codehilite .gs { color: #F8F8F2; font-weight: bold } /* Generic.Strong */
+.codehilite .gu { color: #959077 } /* Generic.Subheading */
+.codehilite .gt { color: #66D9EF } /* Generic.Traceback */
+.codehilite .kc { color: #66D9EF } /* Keyword.Constant */
+.codehilite .kd { color: #66D9EF } /* Keyword.Declaration */
+.codehilite .kn { color: #FF4689 } /* Keyword.Namespace */
+.codehilite .kp { color: #66D9EF } /* Keyword.Pseudo */
+.codehilite .kr { color: #66D9EF } /* Keyword.Reserved */
+.codehilite .kt { color: #66D9EF } /* Keyword.Type */
+.codehilite .ld { color: #E6DB74 } /* Literal.Date */
+.codehilite .m { color: #AE81FF } /* Literal.Number */
+.codehilite .s { color: #E6DB74 } /* Literal.String */
+.codehilite .na { color: #A6E22E } /* Name.Attribute */
+.codehilite .nb { color: #A6E22E } /* Name.Builtin */
+.codehilite .nc { color: #A6E22E } /* Name.Class */
+.codehilite .no { color: #66D9EF } /* Name.Constant */
+.codehilite .nd { color: #A6E22E } /* Name.Decorator */
+.codehilite .ni { color: #F8F8F2 } /* Name.Entity */
+.codehilite .ne { color: #A6E22E } /* Name.Exception */
+.codehilite .nf { color: #A6E22E } /* Name.Function */
+.codehilite .nl { color: #F8F8F2 } /* Name.Label */
+.codehilite .nn { color: #F8F8F2 } /* Name.Namespace */
+.codehilite .nx { color: #A6E22E } /* Name.Other */
+.codehilite .py { color: #F8F8F2 } /* Name.Property */
+.codehilite .nt { color: #FF4689 } /* Name.Tag */
+.codehilite .nv { color: #F8F8F2 } /* Name.Variable */
+.codehilite .ow { color: #FF4689 } /* Operator.Word */
+.codehilite .pm { color: #F8F8F2 } /* Punctuation.Marker */
+.codehilite .w { color: #F8F8F2 } /* Text.Whitespace */
+.codehilite .mb { color: #AE81FF } /* Literal.Number.Bin */
+.codehilite .mf { color: #AE81FF } /* Literal.Number.Float */
+.codehilite .mh { color: #AE81FF } /* Literal.Number.Hex */
+.codehilite .mi { color: #AE81FF } /* Literal.Number.Integer */
+.codehilite .mo { color: #AE81FF } /* Literal.Number.Oct */
+.codehilite .sa { color: #E6DB74 } /* Literal.String.Affix */
+.codehilite .sb { color: #E6DB74 } /* Literal.String.Backtick */
+.codehilite .sc { color: #E6DB74 } /* Literal.String.Char */
+.codehilite .dl { color: #E6DB74 } /* Literal.String.Delimiter */
+.codehilite .sd { color: #E6DB74 } /* Literal.String.Doc */
+.codehilite .s2 { color: #E6DB74 } /* Literal.String.Double */
+.codehilite .se { color: #AE81FF } /* Literal.String.Escape */
+.codehilite .sh { color: #E6DB74 } /* Literal.String.Heredoc */
+.codehilite .si { color: #E6DB74 } /* Literal.String.Interpol */
+.codehilite .sx { color: #E6DB74 } /* Literal.String.Other */
+.codehilite .sr { color: #E6DB74 } /* Literal.String.Regex */
+.codehilite .s1 { color: #E6DB74 } /* Literal.String.Single */
+.codehilite .ss { color: #E6DB74 } /* Literal.String.Symbol */
+.codehilite .bp { color: #A6E22E } /* Name.Builtin.Pseudo */
+.codehilite .fm { color: #A6E22E } /* Name.Function.Magic */
+.codehilite .vc { color: #F8F8F2 } /* Name.Variable.Class */
+.codehilite .vg { color: #F8F8F2 } /* Name.Variable.Global */
+.codehilite .vi { color: #F8F8F2 } /* Name.Variable.Instance */
+.codehilite .vm { color: #F8F8F2 } /* Name.Variable.Magic */
+.codehilite .il { color: #AE81FF } /* Literal.Number.Integer.Long */</style>
+</head>
+<body>
+<header class="hero">
+  <div class="wrap">
+    <h1>STM32 平衡车程序代码详解教程</h1>
+    <p>超详细版 · 逐文件 / 逐函数 / 逐行讲解 · 原理推导 + 寄存器细节 + 时序图 + 调参 FAQ</p>
+    <p>基于江协科技《平衡车入门教程》06-平衡车程序优化工程源码</p>
+    <div class="tags">
+      <span>STM32F103C8T6</span><span>标准外设库</span><span>串级 PID</span>
+      <span>互补滤波</span><span>软件 I2C</span><span>正交编码器</span>
+      <span>USART 蓝牙调参</span><span>OLED 显示驱动</span>
+    </div>
+  </div>
+</header>
+<div class="wrap">
+<p>﻿# STM32 平衡车程序代码详解教程（超详细版）</p>
+<blockquote>
+<p>基于《江协科技 平衡车入门教程》"06-平衡车程序优化"工程源码
+主控：STM32F103C8T6（72MHz Cortex-M3）· 标准外设库 · 串级 PID 控制
+本文逐文件、逐函数、逐行讲解全部自编代码，包含原理推导、寄存器细节、时序图、调参方法与常见问题。</p>
+</blockquote>
+<hr>
+<h2 id="_1">目录</h2>
+<ul>
+<li><a href="#第-0-章-工程全景">第 0 章 工程全景</a></li>
+<li><a href="#第-1-章-程序骨架mainc-逐行精讲">第 1 章 程序骨架：main.c 逐行精讲</a></li>
+<li><a href="#第-2-章-pid-控制器pidc--pidh">第 2 章 PID 控制器：PID.c / PID.h</a></li>
+<li><a href="#第-3-章-姿态感知myi2c--mpu6050--互补滤波">第 3 章 姿态感知：MyI2C / MPU6050 / 互补滤波</a></li>
+<li><a href="#第-4-章-执行机构pwm--motor--encoder">第 4 章 执行机构：PWM / Motor / Encoder</a></li>
+<li><a href="#第-5-章-系统节拍timer--delay--中断系统">第 5 章 系统节拍：Timer / Delay / 中断系统</a></li>
+<li><a href="#第-6-章-人机交互key--led--oled">第 6 章 人机交互：Key / LED / OLED</a></li>
+<li><a href="#第-7-章-串行通信serial--blueserial">第 7 章 串行通信：Serial / BlueSerial</a></li>
+<li><a href="#第-8-章-工程组织与其它文件">第 8 章 工程组织与其它文件</a></li>
+<li><a href="#第-9-章-调参方法与常见问题-faq">第 9 章 调参方法与常见问题 FAQ</a></li>
+<li><a href="#第-10-章-思考题与进阶方向">第 10 章 思考题与进阶方向</a></li>
+<li><a href="#附录-a-引脚分配总表">附录 A 引脚分配总表</a></li>
+<li><a href="#附录-b-全局符号速查表">附录 B 全局符号速查表</a></li>
+</ul>
+<hr>
+<h1 id="0">第 0 章 工程全景</h1>
+<h2 id="01">0.1 这套程序要解决什么问题</h2>
+<p>两轮自平衡车的本质是一个<strong>倒立摆</strong>：重心在轮轴上方，天然不稳定，必须实时测量车身倾角、并驱动车轮向"倒下的方向"运动，把车底"接"回重心下方。整个过程要求：</p>
+<ol>
+<li><strong>感知</strong>：MPU6050 测出车身倾角（加速度计 + 陀螺仪融合）；</li>
+<li><strong>决策</strong>：串级 PID 计算需要的电机输出（直立环 + 速度环 + 转向环）；</li>
+<li><strong>执行</strong>：TIM2 输出 PWM，经驱动芯片控制两个带编码器的减速电机；</li>
+<li><strong>节拍</strong>：TIM1 以 1kHz 中断作为整个系统的"心跳"，保证控制周期严格稳定。</li>
+</ol>
+<p><svg viewBox="0 0 860 300" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="13">
+  <defs>
+    <marker id="ar" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#0b6e99"/>
+    </marker>
+  </defs>
+  <rect x="20" y="110" width="130" height="60" rx="8" fill="#e8f4fa" stroke="#0b6e99" stroke-width="2"/>
+  <text x="85" y="135" text-anchor="middle" fill="#0b6e99" font-weight="bold">MPU6050</text>
+  <text x="85" y="155" text-anchor="middle" fill="#555">姿态角 Angle</text>
+  <rect x="200" y="30" width="150" height="60" rx="8" fill="#fff3e0" stroke="#e07b00" stroke-width="2"/>
+  <text x="275" y="55" text-anchor="middle" fill="#e07b00" font-weight="bold">速度环 SpeedPID</text>
+  <text x="275" y="75" text-anchor="middle" fill="#555">50ms · 输出→目标角度</text>
+  <rect x="200" y="110" width="150" height="60" rx="8" fill="#fff3e0" stroke="#e07b00" stroke-width="2"/>
+  <text x="275" y="135" text-anchor="middle" fill="#e07b00" font-weight="bold">直立环 AnglePID</text>
+  <text x="275" y="155" text-anchor="middle" fill="#555">10ms · 输出→PWM</text>
+  <rect x="200" y="190" width="150" height="60" rx="8" fill="#fff3e0" stroke="#e07b00" stroke-width="2"/>
+  <text x="275" y="215" text-anchor="middle" fill="#e07b00" font-weight="bold">转向环 TurnPID</text>
+  <text x="275" y="235" text-anchor="middle" fill="#555">50ms · 输出→差速</text>
+  <rect x="420" y="110" width="140" height="60" rx="8" fill="#f0f0f0" stroke="#888" stroke-width="2"/>
+  <text x="490" y="135" text-anchor="middle" font-weight="bold" fill="#333">合成 + 限幅</text>
+  <text x="490" y="155" text-anchor="middle" fill="#555">Left/RightPWM</text>
+  <rect x="610" y="110" width="110" height="60" rx="8" fill="#eaf7ea" stroke="#2e8b57" stroke-width="2"/>
+  <text x="665" y="135" text-anchor="middle" fill="#2e8b57" font-weight="bold">电机 ×2</text>
+  <text x="665" y="155" text-anchor="middle" fill="#555">带编码器</text>
+  <rect x="420" y="30" width="140" height="40" rx="8" fill="#f7e8f5" stroke="#a04c96" stroke-width="2"/>
+  <text x="490" y="56" text-anchor="middle" fill="#a04c96">编码器测速</text>
+  <rect x="20" y="190" width="130" height="60" rx="8" fill="#e8f4fa" stroke="#0b6e99" stroke-width="2"/>
+  <text x="85" y="215" text-anchor="middle" fill="#0b6e99" font-weight="bold">遥控指令</text>
+  <text x="85" y="235" text-anchor="middle" fill="#555">蓝牙 USART2</text>
+  <line x1="150" y1="140" x2="198" y2="140" stroke="#0b6e99" stroke-width="2" marker-end="url(#ar)"/>
+  <line x1="275" y1="90" x2="275" y2="108" stroke="#e07b00" stroke-width="2" marker-end="url(#ar)"/>
+  <line x1="350" y1="140" x2="418" y2="140" stroke="#e07b00" stroke-width="2" marker-end="url(#ar)"/>
+  <line x1="350" y1="220" x2="420" y2="165" stroke="#e07b00" stroke-width="2" marker-end="url(#ar)"/>
+  <line x1="560" y1="140" x2="608" y2="140" stroke="#888" stroke-width="2" marker-end="url(#ar)"/>
+  <line x1="665" y1="110" x2="530" y2="55" stroke="#a04c96" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#ar)"/>
+  <line x1="560" y1="50" x2="300" y2="52" stroke="#a04c96" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#ar)"/>
+  <line x1="150" y1="215" x2="240" y2="255" stroke="#888" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <text x="200" y="285" fill="#888" font-size="12">虚线：编码器反馈 → 速度环/转向环</text>
+</svg></p>
+<p><strong>为什么是"串级"？</strong> 速度环的输出不是 PWM，而是<strong>直立环的目标角度</strong>。想让车前进，就先让它"往前倾"——倾角产生加速度，速度才会变化。外环（速度）慢（50ms）、内环（直立）快（10ms），外环的输出作为内环的设定值，这是工业控制中典型的串级结构。</p>
+<h2 id="02">0.2 硬件资源与引脚分配</h2>
+<table>
+<thead>
+<tr>
+<th>外设</th>
+<th>引脚</th>
+<th>模式</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TIM2 CH1/CH2</td>
+<td>PA0 / PA1</td>
+<td>复用推挽</td>
+<td>20kHz 电机 PWM</td>
+</tr>
+<tr>
+<td>GPIOB</td>
+<td>PB12~PB15</td>
+<td>推挽输出</td>
+<td>左右电机方向控制（IN1/IN2）</td>
+</tr>
+<tr>
+<td>TIM3 CH1/CH2</td>
+<td>PA6 / PA7</td>
+<td>上拉输入</td>
+<td>左电机编码器 A/B 相</td>
+</tr>
+<tr>
+<td>TIM4 CH1/CH2</td>
+<td>PB6 / PB7</td>
+<td>上拉输入</td>
+<td>右电机编码器 A/B 相</td>
+</tr>
+<tr>
+<td>软件 I2C</td>
+<td>PB10 / PB11</td>
+<td>开漏输出</td>
+<td>MPU6050（SCL/SDA）</td>
+</tr>
+<tr>
+<td>软件 I2C</td>
+<td>PB8 / PB9</td>
+<td>开漏输出</td>
+<td>OLED（SCL/SDA）</td>
+</tr>
+<tr>
+<td>USART1</td>
+<td>PA9 / PA10</td>
+<td>复用/上拉</td>
+<td>调试串口（9600-8-N-1）</td>
+</tr>
+<tr>
+<td>USART2</td>
+<td>PA2 / PA3</td>
+<td>复用/上拉</td>
+<td>蓝牙模块（9600-8-N-1）</td>
+</tr>
+<tr>
+<td>GPIOB/GPIOA</td>
+<td>PB1/PB0/PA5/PA4</td>
+<td>上拉输入</td>
+<td>4 个用户按键（低电平有效）</td>
+</tr>
+<tr>
+<td>GPIOC</td>
+<td>PC13</td>
+<td>推挽输出</td>
+<td>板载 LED（低电平点亮）</td>
+</tr>
+</tbody>
+</table>
+<p>注意一个细节：<strong>OLED 和 MPU6050 各用一套独立软件 I2C</strong>，互不复用。这样两套设备的时序完全独立，不需要处理 I2C 多从机寻址切换的复杂性——用引脚换来了简单。</p>
+<h2 id="03-72mhz">0.3 时钟基础：72MHz 从哪来</h2>
+<p>STM32F103 上电默认用内部 8MHz HSI。本工程依赖启动代码 <code>system_stm32f10x.c</code> 中的 <code>SystemInit()</code> 完成时钟配置：</p>
+<div class="codehilite"><pre><span></span><code>HSE 外部晶振 8MHz ──×9(PLL)──▶ SYSCLK 72MHz ──▶ AHB 72MHz
+                                                ├─▶ APB1 分频2 = 36MHz（TIM2/3/4 挂这里）
+                                                └─▶ APB2 不分频 = 72MHz（TIM1/GPIO/USART1/ADC）
+</code></pre></div>
+
+<p><strong>关键规则</strong>：挂在 APB1（36MHz）上的定时器，如果 APB1 分频系数不为 1，则定时器时钟自动 ×2，所以 <strong>TIM2/TIM3/TIM4 的计数时钟同样是 72MHz</strong>。后面所有 PSC 计算都以 72MHz 为基准。</p>
+<h2 id="04">0.4 工程目录结构</h2>
+<div class="codehilite"><pre><span></span><code>06-平衡车程序优化
+├── Start    启动文件 stm32f10x.s（中断向量表）、system_stm32f10x.c（时钟）、core_cm3.c（内核）
+├── Library  ST 标准外设库（stm32f10x_gpio/tim/usart/rcc... + misc.c）
+├── User     main.c（主逻辑+中断）、PID.c/h、stm32f10x_it.c、stm32f10x_conf.h
+├── System   Timer.c/h（TIM1 节拍）、Delay.c/h（SysTick 延时）
+└── Hardware Motor/PWM/Encoder/MPU6050/MyI2C/OLED/OLED_Data/Key/LED/Serial/BlueSerial
+</code></pre></div>
+
+<p>分层思想：<code>Start → Library → System → Hardware → User</code>，上层只调用下层接口。所有"与具体硬件接线有关"的代码被压到各模块的引脚配置函数里，换引脚只改一处。</p>
+<hr>
+<h1 id="1-mainc">第 1 章 程序骨架：main.c 逐行精讲</h1>
+<p><a href="file:///e:/BaiduNetdiskDownload/平衡车入门教程资料-江协/程序源码/程序源码-无注释版/平衡车程序/06-平衡车程序优化/User/main.c">main.c</a> 是全车的大脑：全局数据、PID 参数、初始化流程、主循环（显示 + 遥控解析）、以及 1kHz 中断调度中心都在这里。</p>
+<h2 id="11">1.1 头文件包含</h2>
+<div class="codehilite"><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">"stm32f10x.h"</span><span class="w">    </span><span class="c1">// 汇总了器件寄存器定义 + stm32f10x_conf.h（标准库全部头文件）</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">"Delay.h"</span><span class="w">        </span><span class="c1">// SysTick 延时（本工程 main 中未直接用，模块内部用）</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">"OLED.h"</span><span class="w">         </span><span class="c1">// OLED 驱动接口</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">"LED.h"</span><span class="w"> </span><span class="c1">"Timer.h" "Key.h" "MPU6050.h" "Motor.h" "Encoder.h"</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">"Serial.h"</span><span class="w">       </span><span class="c1">// USART1 调试串口</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">"BlueSerial.h"</span><span class="w">   </span><span class="c1">// USART2 蓝牙</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">"PID.h"</span><span class="w">          </span><span class="c1">// PID 结构体与算法</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;math.h&gt;</span><span class="w">         </span><span class="c1">// atan2（姿态解算）</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string.h&gt;</span><span class="w">       </span><span class="c1">// strcmp/strtok（协议解析）</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdlib.h&gt;</span><span class="w">       </span><span class="c1">// atof/atoi（字符串转数值）</span>
+</code></pre></div>
+
+<p><code>stm32f10x.h</code> 顶部有 <code>#include "stm32f10x_conf.h"</code>（需定义 <code>USE_STDPERIPH_DRIVER</code>），后者把所有标准库 .h 一网打尽，所以业务代码只写一句器件头即可。</p>
+<h2 id="12">1.2 全局变量逐个讲清</h2>
+<div class="codehilite"><pre><span></span><code><span class="kt">int16_t</span><span class="w"> </span><span class="n">AX</span><span class="p">,</span><span class="w"> </span><span class="n">AY</span><span class="p">,</span><span class="w"> </span><span class="n">AZ</span><span class="p">,</span><span class="w"> </span><span class="n">GX</span><span class="p">,</span><span class="w"> </span><span class="n">GY</span><span class="p">,</span><span class="w"> </span><span class="n">GZ</span><span class="p">;</span>
+</code></pre></div>
+
+<p>MPU6050 六轴原始值。<code>int16_t</code> 是<strong>有符号</strong> 16 位，对应传感器输出 <code>(高字节&lt;&lt;8)|低字节</code> 的补码格式。以陀螺仪 ±2000°/s 量程为例，灵敏度 16.4 LSB/(°/s)：读到 +32768 表示 +2000°/s。全车只用到了 <code>AX、AZ（算倾角）</code>和 <code>GY（俯仰角速度）</code>，其余留作扩展。</p>
+<div class="codehilite"><pre><span></span><code><span class="kt">uint8_t</span><span class="w"> </span><span class="n">TimerErrorFlag</span><span class="p">;</span><span class="w">   </span><span class="c1">// 中断超时报警标志：=1 表示某次中断执行时间超过 1ms</span>
+<span class="kt">uint16_t</span><span class="w"> </span><span class="n">TimerCount</span><span class="p">;</span><span class="w">      </span><span class="c1">// 中断退出时 TIM1 计数器快照，用于估算中断耗时</span>
+</code></pre></div>
+
+<p>这两个是<strong>调试设施</strong>：中断函数末尾会二次检查更新标志（见 1.6），若上次中断没处理完下一次更新又来了，说明 10ms/50ms 分支太耗时，<code>TimerErrorFlag</code> 置 1，可在调试器/串口观察。</p>
+<div class="codehilite"><pre><span></span><code><span class="kt">float</span><span class="w"> </span><span class="n">AngleAcc</span><span class="p">;</span><span class="w">    </span><span class="c1">// 加速度计单独解算出的角度（噪声大、不漂移）</span>
+<span class="kt">float</span><span class="w"> </span><span class="n">AngleGyro</span><span class="p">;</span><span class="w">   </span><span class="c1">// 陀螺仪积分得到的角度（平滑、会漂移）</span>
+<span class="kt">float</span><span class="w"> </span><span class="n">Angle</span><span class="p">;</span><span class="w">       </span><span class="c1">// 二者互补融合后的最终角度 —— 全车的核心状态量</span>
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code><span class="kt">uint8_t</span><span class="w"> </span><span class="n">KeyNum</span><span class="p">,</span><span class="w"> </span><span class="n">RunFlag</span><span class="p">;</span>
+</code></pre></div>
+
+<p><code>KeyNum</code> 暂存按键号（1~4，0 表示无）；<code>RunFlag</code> 平衡车运行开关：1=电机受控，0=电机停转。</p>
+<div class="codehilite"><pre><span></span><code><span class="kt">int16_t</span><span class="w"> </span><span class="n">LeftPWM</span><span class="p">,</span><span class="w"> </span><span class="n">RightPWM</span><span class="p">;</span><span class="w">   </span><span class="c1">// 送入 Motor_SetPWM 的最终值，范围 ±100</span>
+<span class="kt">int16_t</span><span class="w"> </span><span class="n">AvePWM</span><span class="p">,</span><span class="w"> </span><span class="n">DifPWM</span><span class="p">;</span><span class="w">      </span><span class="c1">// 平均分量（直立环输出）与差动分量（转向环输出）</span>
+</code></pre></div>
+
+<p>PWM 用<strong>有符号数</strong>表示"大小 + 方向"，正负号在 <code>Motor_SetPWM</code> 内部翻译成方向引脚电平。合成公式（中断里）：</p>
+<div class="codehilite"><pre><span></span><code>LeftPWM  = AvePWM + DifPWM/2     （左轮 = 前进分量 + 转向分量）
+RightPWM = AvePWM - DifPWM/2     （右轮 = 前进分量 - 转向分量）
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code><span class="kt">float</span><span class="w"> </span><span class="n">LeftSpeed</span><span class="p">,</span><span class="w"> </span><span class="n">RightSpeed</span><span class="p">;</span><span class="w">   </span><span class="c1">// 左右轮实测速度（单位见 1.6 换算说明）</span>
+<span class="kt">float</span><span class="w"> </span><span class="n">AveSpeed</span><span class="p">,</span><span class="w"> </span><span class="n">DifSpeed</span><span class="p">;</span><span class="w">      </span><span class="c1">// 平均速度（速度环反馈）、速度差（转向环反馈）</span>
+</code></pre></div>
+
+<h2 id="13-pid">1.3 三个 PID 控制器的出厂参数</h2>
+<div class="codehilite"><pre><span></span><code><span class="n">PID_t</span><span class="w"> </span><span class="n">AnglePID</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="p">.</span><span class="n">Kp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">    </span><span class="p">.</span><span class="n">Ki</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.1</span><span class="p">,</span><span class="w">  </span><span class="p">.</span><span class="n">Kd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span>
+<span class="w">    </span><span class="p">.</span><span class="n">OutMax</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w">  </span><span class="p">.</span><span class="n">OutMin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-100</span><span class="p">,</span><span class="w">     </span><span class="c1">// 输出限幅 = PWM 满量程</span>
+<span class="w">    </span><span class="p">.</span><span class="n">OutOffset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">                     </span><span class="c1">// 死区补偿</span>
+<span class="w">    </span><span class="p">.</span><span class="n">ErrorIntMax</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">600</span><span class="p">,</span><span class="w"> </span><span class="p">.</span><span class="n">ErrorIntMin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-600</span><span class="p">,</span>
+<span class="p">};</span>
+</code></pre></div>
+
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>直立环 AnglePID</th>
+<th>速度环 SpeedPID</th>
+<th>转向环 TurnPID</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Kp</td>
+<td>5</td>
+<td>2</td>
+<td>4</td>
+<td>误差 → 输出的比例强度</td>
+</tr>
+<tr>
+<td>Ki</td>
+<td>0.1</td>
+<td>0.05</td>
+<td>3</td>
+<td>消除稳态误差</td>
+</tr>
+<tr>
+<td>Kd</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>直立环用"微分先行"，其余未用</td>
+</tr>
+<tr>
+<td>Out 限幅</td>
+<td>±100</td>
+<td>±20</td>
+<td>±50</td>
+<td>速度环输出是"目标角度"（°），所以只给 ±20</td>
+</tr>
+<tr>
+<td>积分限幅</td>
+<td>±600</td>
+<td>±150</td>
+<td>±20</td>
+<td>积分项最大贡献 = Ki×600 = 60 PWM</td>
+</tr>
+</tbody>
+</table>
+<p><strong>速度环 Kd=0、转向环 Kd=0</strong> 不是偷懒：外环周期 50ms 且反馈本身经过机械滤波，微分项只会放大噪声；而直立环 10ms 快速响应中 D 项（阻尼）必不可少。</p>
+<p><code>OutMax=±20</code> 的物理含义：速度环最多命令直立环"目标角 ±20°"，配合主循环的 <code>|Angle|&gt;50°</code> 保护，形成两级安全边界。</p>
+<h2 id="14">1.4 初始化顺序大有讲究</h2>
+<div class="codehilite"><pre><span></span><code><span class="n">OLED_Init</span><span class="p">();</span><span class="w">        </span><span class="c1">// 1. 显示最先好，方便后续调试观察</span>
+<span class="n">MPU6050_Init</span><span class="p">();</span><span class="w">     </span><span class="c1">// 2. 传感器就绪（内部含 MyI2C_Init + 6 条配置命令）</span>
+<span class="n">BlueSerial_Init</span><span class="p">();</span><span class="w">  </span><span class="c1">// 3. 蓝牙：越早开越好，随时可能收到调参指令</span>
+<span class="n">LED_Init</span><span class="p">();</span><span class="w"> </span><span class="n">Key_Init</span><span class="p">();</span><span class="w"> </span><span class="n">Motor_Init</span><span class="p">();</span><span class="w"> </span><span class="n">Encoder_Init</span><span class="p">();</span><span class="w"> </span><span class="n">Serial_Init</span><span class="p">();</span>
+
+<span class="n">Timer_Init</span><span class="p">();</span><span class="w">       </span><span class="c1">// 4. 最后才开 1kHz 中断！</span>
+</code></pre></div>
+
+<p><strong>为什么 Timer_Init 必须放最后？</strong> <code>Timer_Init</code> 一执行，1kHz 中断立刻开始跑，中断里会读 MPU6050、读编码器、调用 PID——如果此时某个外设还没初始化，中断将读到垃圾数据甚至卡死（例如 I2C 未初始化时读 MPU6050）。"外设先就位、心跳最后启动"是实时系统的通用原则。</p>
+<h2 id="15-while1">1.5 主循环 while(1) 逐段精讲</h2>
+<p>主循环承担三件事：按键启停、OLED 刷新、蓝牙协议解析。它跑得越快越好，控制本身不在这里。</p>
+<h3 id="1">（1）运行指示与按键启停</h3>
+<div class="codehilite"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">RunFlag</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="n">LED_ON</span><span class="p">();}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="n">LED_OFF</span><span class="p">();}</span><span class="w">    </span><span class="c1">// LED 常亮 = 运行中</span>
+<span class="n">KeyNum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Key_GetNum</span><span class="p">();</span><span class="w">                         </span><span class="c1">// 取键值（读后自动清零）</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">KeyNum</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">RunFlag</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">PID_Init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">AnglePID</span><span class="p">);</span><span class="w">   </span><span class="c1">// 清 Target/Actual/ErrorInt/Out 等全部历史状态</span>
+<span class="w">        </span><span class="n">PID_Init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">SpeedPID</span><span class="p">);</span>
+<span class="w">        </span><span class="n">PID_Init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">TurnPID</span><span class="p">);</span>
+<span class="w">        </span><span class="n">RunFlag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">RunFlag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>启动前必须 <code>PID_Init</code> 三个控制器：车停过一段时间，积分器里可能残留上次运行的误差累积；不清理的话，一启动积分项就会输出一个"莫名的偏置"，车会窜一下。清零后一切从头积累。</p>
+<h3 id="2oled">（2）OLED 三列调试界面</h3>
+<div class="codehilite"><pre><span></span><code><span class="n">OLED_Clear</span><span class="p">();</span><span class="w">                    </span><span class="c1">// 只清显存数组（内存操作，很快）</span>
+<span class="n">OLED_Printf</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w">  </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">OLED_6X8</span><span class="p">,</span><span class="w"> </span><span class="s">"  Angle"</span><span class="p">);</span><span class="w">    </span><span class="c1">// 第1列：直立环</span>
+<span class="n">OLED_Printf</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w">  </span><span class="mi">8</span><span class="p">,</span><span class="w"> </span><span class="n">OLED_6X8</span><span class="p">,</span><span class="w"> </span><span class="s">"P:%05.2f"</span><span class="p">,</span><span class="w"> </span><span class="n">AnglePID</span><span class="p">.</span><span class="n">Kp</span><span class="p">);</span>
+<span class="p">...</span>
+<span class="n">OLED_Printf</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">48</span><span class="p">,</span><span class="w"> </span><span class="n">OLED_6X8</span><span class="p">,</span><span class="w"> </span><span class="s">"O:%+05.0f"</span><span class="p">,</span><span class="w"> </span><span class="n">AnglePID</span><span class="p">.</span><span class="n">Out</span><span class="p">);</span><span class="w">   </span><span class="c1">// 输出</span>
+<span class="n">OLED_Printf</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">56</span><span class="p">,</span><span class="w"> </span><span class="n">OLED_6X8</span><span class="p">,</span><span class="w"> </span><span class="s">"GY:%+05d"</span><span class="p">,</span><span class="w"> </span><span class="n">GY</span><span class="p">);</span><span class="w">              </span><span class="c1">// 原始陀螺值（看零偏）</span>
+<span class="n">OLED_Printf</span><span class="p">(</span><span class="mi">56</span><span class="p">,</span><span class="mi">56</span><span class="p">,</span><span class="w"> </span><span class="n">OLED_6X8</span><span class="p">,</span><span class="w"> </span><span class="s">"Offset:%02.0f"</span><span class="p">,</span><span class="w"> </span><span class="n">AnglePID</span><span class="p">.</span><span class="n">OutOffset</span><span class="p">);</span>
+<span class="n">OLED_Printf</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="p">...</span><span class="w">  </span><span class="s">"Speed"</span><span class="p">);</span><span class="w">            </span><span class="c1">// 第2列：速度环（50像素起）</span>
+<span class="n">OLED_Printf</span><span class="p">(</span><span class="mi">88</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="p">...</span><span class="w">  </span><span class="s">"Turn"</span><span class="p">);</span><span class="w">             </span><span class="c1">// 第3列：转向环（88像素起）</span>
+<span class="n">OLED_Update</span><span class="p">();</span><span class="w">                   </span><span class="c1">// 1KB 显存经软 I2C 整屏发出</span>
+</code></pre></div>
+
+<p><code>%05.2f</code> 表示宽度 5、不足补零、两位小数；<code>%+05.1f</code> 的 <code>+</code> 强制显示正负号，数值变化时符号位不跳动，读数更稳。这一整块界面就是<strong>在线调参仪表盘</strong>：手机改 PID → 屏幕立即确认写入值，屏幕同时显示 Target/Actual/Out 三要素，调参时一眼看出"误差多大、输出了多少"。</p>
+<blockquote>
+<p>⚠️ 性能账本：<code>OLED_Update()</code> 要通过软件 I2C 发送 8页×128字节 = 1024 字节 ≈ 9216 个 SCL 时钟+额外时序开销。按 GPIO 翻转约 0.5~1MHz 的位速率估算，一次全屏刷新要 <strong>十几毫秒</strong>。所以主循环实际是"几 ms 一圈"，而不是"越快越好"。好在控制都放在中断里，主循环慢一点只影响显示/响应流畅度，不影响控制稳定性——这正是中断调度的价值。</p>
+</blockquote>
+<h3 id="3strtok">（3）蓝牙协议解析（strtok 三连）</h3>
+<div class="codehilite"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">BlueSerial_RxFlag</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w">      </span><span class="c1">// 中断收完一包 [xxx] 后置 1</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">Tag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">strtok</span><span class="p">(</span><span class="n">BlueSerial_RxPacket</span><span class="p">,</span><span class="w"> </span><span class="s">","</span><span class="p">);</span><span class="w">   </span><span class="c1">// 按逗号切第一段</span>
+</code></pre></div>
+
+<p><code>strtok</code> 是 C 标准库函数：第一次调用传入字符串，后续传 <code>NULL</code> 继续切同一字符串。它会把分隔符替换成 <code>\0</code> 并返回段指针。协议三种包：</p>
+<p><strong>① slider 滑块（在线调参）</strong>，格式 <code>[slider,AngleKp,5.5]</code>：</p>
+<div class="codehilite"><pre><span></span><code><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">Name</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">strtok</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="s">","</span><span class="p">);</span>
+<span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">Value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">strtok</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="s">","</span><span class="p">);</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">strcmp</span><span class="p">(</span><span class="n">Name</span><span class="p">,</span><span class="w"> </span><span class="s">"AngleKp"</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w">  </span><span class="n">AnglePID</span><span class="p">.</span><span class="n">Kp</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">atof</span><span class="p">(</span><span class="n">Value</span><span class="p">);</span>
+<span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">strcmp</span><span class="p">(</span><span class="n">Name</span><span class="p">,</span><span class="w"> </span><span class="s">"SpeedKi"</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="n">SpeedPID</span><span class="p">.</span><span class="n">Ki</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atof</span><span class="p">(</span><span class="n">Value</span><span class="p">);</span>
+<span class="p">...</span><span class="w">   </span><span class="c1">// 共覆盖 9 个 PID 参数 + Offset（OutOffset 死区补偿）</span>
+</code></pre></div>
+
+<p><code>atof</code> 把 <code>"5.5"</code> 变成 <code>5.5f</code>。手机 App 上拖滑块 → 车上参数实时生效 → 看车况 → 再拖，这就是"在线整定"的完整闭环。</p>
+<p><strong>② joystick 摇杆（遥控）</strong>，格式 <code>[joystick,0,50,0,0]</code>：</p>
+<div class="codehilite"><pre><span></span><code><span class="kt">int8_t</span><span class="w"> </span><span class="n">LH</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atoi</span><span class="p">(</span><span class="n">strtok</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="s">","</span><span class="p">));</span><span class="w">   </span><span class="c1">// 左摇杆水平 -128~127</span>
+<span class="kt">int8_t</span><span class="w"> </span><span class="n">LV</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atoi</span><span class="p">(</span><span class="n">strtok</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="s">","</span><span class="p">));</span><span class="w">   </span><span class="c1">// 左摇杆垂直</span>
+<span class="kt">int8_t</span><span class="w"> </span><span class="n">RH</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atoi</span><span class="p">(</span><span class="n">strtok</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="s">","</span><span class="p">));</span><span class="w">   </span><span class="c1">// 右摇杆水平</span>
+<span class="kt">int8_t</span><span class="w"> </span><span class="n">RV</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atoi</span><span class="p">(</span><span class="n">strtok</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="s">","</span><span class="p">));</span>
+<span class="n">SpeedPID</span><span class="p">.</span><span class="n">Target</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LV</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">25.0</span><span class="p">;</span><span class="w">    </span><span class="c1">// 推杆最大约 ±127 → 目标速度约 ±5</span>
+<span class="n">TurnPID</span><span class="p">.</span><span class="n">Target</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">RH</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">25.0</span><span class="p">;</span><span class="w">    </span><span class="c1">// 右摇杆控制转向目标</span>
+</code></pre></div>
+
+<p><code>/25.0</code> 把摇杆刻度换算成控制器量纲。注意 <code>int8_t</code>：App 若发来 0~255 无符号值，超过 127 会变负数，遥控"半程反跳"就是这个原因。</p>
+<p><strong>③ key 按键包</strong>：解析了 Name/Action 但函数体为空，属于<strong>预留接口</strong>（App 按钮事件）。</p>
+<p>最后 <code>BlueSerial_RxFlag = 0;</code> 允许接收下一包。</p>
+<blockquote>
+<p>⚠️ 数据竞争提示：中断随时可能写 <code>BlueSerial_RxPacket</code>。这里靠 <code>RxFlag==1 期间中断丢弃新包</code>（见第 7 章）保护，主循环解析期间新来的完整包会被丢掉——对遥控场景可接受，但这是"丢包保一致"的取舍，不是严格互斥。</p>
+</blockquote>
+<h2 id="16-tim1_up_irqhandler">1.6 中断调度中心 TIM1_UP_IRQHandler 逐行精讲</h2>
+<p>这是全车<strong>实时性核心</strong>，请对照源码逐行看：</p>
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">TIM1_UP_IRQHandler</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">Count0</span><span class="p">,</span><span class="w"> </span><span class="n">Count1</span><span class="p">;</span><span class="w">      </span><span class="c1">// static：跨调用保持。两个软件分频计数器</span>
+</code></pre></div>
+
+<p><code>static</code> 局部变量存放在全局区而非栈上，函数退出值不丢。<code>Count0</code> 分频出 10ms（姿态+直立环），<code>Count1</code> 分频出 50ms（速度+转向环）。</p>
+<div class="codehilite"><pre><span></span><code><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">TIM_GetITStatus</span><span class="p">(</span><span class="n">TIM1</span><span class="p">,</span><span class="w"> </span><span class="n">TIM_IT_Update</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">SET</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">TIM_ClearITPendingBit</span><span class="p">(</span><span class="n">TIM1</span><span class="p">,</span><span class="w"> </span><span class="n">TIM_IT_Update</span><span class="p">);</span><span class="w">   </span><span class="c1">// 尽早清标志，为下一次中断做准备</span>
+<span class="w">        </span><span class="n">Key_Tick</span><span class="p">();</span><span class="w">                                    </span><span class="c1">// 每 1ms 喂一次按键状态机</span>
+</code></pre></div>
+
+<h3 id="110ms-100hz">（1）10ms 分支：姿态解算 + 直立环（100Hz）</h3>
+<div class="codehilite"><pre><span></span><code><span class="w">        </span><span class="n">Count0</span><span class="w"> </span><span class="o">++</span><span class="p">;</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">Count0</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w">     </span><span class="c1">// 10 × 1ms = 10ms</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">Count0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">            </span><span class="n">MPU6050_GetData</span><span class="p">(</span><span class="o">&amp;</span><span class="n">AX</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">AY</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">AZ</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">GX</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">GY</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">GZ</span><span class="p">);</span><span class="w">   </span><span class="c1">// 突发读 14 字节</span>
+<span class="w">            </span><span class="n">GY</span><span class="w"> </span><span class="o">-=</span><span class="w"> </span><span class="mi">16</span><span class="p">;</span><span class="w">    </span><span class="c1">// 陀螺零偏扣除（见下）</span>
+</code></pre></div>
+
+<p><strong><code>GY -= 16</code> 的来历</strong>：±2000°/s 量程下灵敏度 16.4 LSB/(°/s)，静止时实测 GY≈+16，即约 1°/s 的零偏。若不扣，1°/s 积分到互补滤波里，10 秒就漂 10°，车必倒。这个 16 是<strong>上电时车静止不动时实测标定</strong>的——换传感器必须重标。</p>
+<div class="codehilite"><pre><span></span><code><span class="w">            </span><span class="n">AngleAcc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="n">atan2</span><span class="p">(</span><span class="n">AX</span><span class="p">,</span><span class="w"> </span><span class="n">AZ</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">3.14159</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">180</span><span class="p">;</span><span class="w">   </span><span class="c1">// 加速度计解算角度</span>
+<span class="w">            </span><span class="n">AngleAcc</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mf">0.5</span><span class="p">;</span><span class="w">                             </span><span class="c1">// 机械零点修正</span>
+</code></pre></div>
+
+<p><code>atan2(AX, AZ)</code> 返回重力方向与 Z 轴的夹角（弧度，±π）。车身前倾 θ 时，重力在 X 轴分量增大、Z 轴减小，<code>atan2(AX/AZ)</code> 即 θ。前面的负号来自传感器<strong>贴装方向</strong>（X 轴正方向与"前倾"相反）；<code>+0.5</code> 是<strong>机械安装零点</strong>——重心/传感器不可能绝对水平，实测静止时显示 0.5°，就直接加上去抵消。</p>
+<div class="codehilite"><pre><span></span><code><span class="w">            </span><span class="n">AngleGyro</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Angle</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">GY</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">32768.0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">2000</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.01</span><span class="p">;</span><span class="w">   </span><span class="c1">// 陀螺仪积分角度</span>
+</code></pre></div>
+
+<p>逐项拆解：
+- <code>GY / 32768.0 * 2000</code>：原始值 → 角速度（°/s）。32768 是 ±2000°/s 满量程对应的码值；
+- <code>* 0.01</code>：°/s × 0.01s（本周期时长 10ms）= <strong>这 10ms 里转过的角度增量</strong>；
+- <code>Angle + ...</code>：上一周期的融合角 + 本周期增量 = 陀螺仪口径的当前角。<strong>积分就在这一个 <code>+</code> 号里</strong>。</p>
+<div class="codehilite"><pre><span></span><code><span class="w">            </span><span class="kt">float</span><span class="w"> </span><span class="n">Alpha</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.01</span><span class="p">;</span>
+<span class="w">            </span><span class="n">Angle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Alpha</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">AngleAcc</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Alpha</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">AngleGyro</span><span class="p">;</span><span class="w">   </span><span class="c1">// 互补滤波</span>
+</code></pre></div>
+
+<p>一行融合两种传感器：陀螺积分（高通特性，短期准）权重 0.99，加速度计角度（低通特性，长期准）权重 0.01。等效于对陀螺做一阶高通、对加计做一阶低通再相加，时间常数 τ ≈ T×(1−α)/α ≈ 0.99s——<strong>秒级内信陀螺，分钟级信加计</strong>，加计的抖动被压到几乎不可见，陀螺的漂移被持续拉回。</p>
+<div class="codehilite"><pre><span></span><code><span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">Angle</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">50</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">Angle</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">-50</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">RunFlag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="p">}</span><span class="w">   </span><span class="c1">// 倒地保护</span>
+</code></pre></div>
+
+<p>倾角超过 ±50° 说明车已经倒了，强制停机，避免轮子疯转、电机堵转过流。重启需按键重新启动（并重置 PID）。</p>
+<div class="codehilite"><pre><span></span><code><span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">RunFlag</span><span class="p">)</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="n">AnglePID</span><span class="p">.</span><span class="n">Actual</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Angle</span><span class="p">;</span><span class="w">      </span><span class="c1">// 反馈量：当前角度</span>
+<span class="w">                </span><span class="n">PID_Update</span><span class="p">(</span><span class="o">&amp;</span><span class="n">AnglePID</span><span class="p">);</span><span class="w">        </span><span class="c1">// 计算直立环输出</span>
+<span class="w">                </span><span class="n">AvePWM</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="n">AnglePID</span><span class="p">.</span><span class="n">Out</span><span class="p">;</span><span class="w">       </span><span class="c1">// ← 这个负号是"符号约定"的枢纽</span>
+</code></pre></div>
+
+<p><strong><code>AvePWM = -AnglePID.Out</code> 的负号</strong>：直立环的正向误差 = "目标角 − 实际角"。假设目标 0°、实际后仰 +5°，希望电机<strong>向后开</strong>把车底接到重心下。而 <code>AnglePID.Out = Kp×(0−5) = −25</code>（负值），若直接送电机则车轮向前——方向反了。工程上不改传感器方向定义，就在输出处统一取负补偿。<strong>符号问题是平衡车第一大坑</strong>，任何一处装反（传感器方向/电机接线/编码器方向）都表现为"一启动就朝一个方向加速到倒"。</p>
+<div class="codehilite"><pre><span></span><code><span class="w">                </span><span class="n">LeftPWM</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">AvePWM</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">DifPWM</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span><span class="w">    </span><span class="c1">// 差速合成</span>
+<span class="w">                </span><span class="n">RightPWM</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AvePWM</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">DifPWM</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
+<span class="w">                </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">LeftPWM</span><span class="w">  </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">100</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="n">LeftPWM</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="mi">100</span><span class="p">;}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">LeftPWM</span><span class="w">  </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">-100</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="n">LeftPWM</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="mi">-100</span><span class="p">;}</span>
+<span class="w">                </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">RightPWM</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">100</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="n">RightPWM</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">100</span><span class="p">;}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">RightPWM</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">-100</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="n">RightPWM</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-100</span><span class="p">;}</span>
+<span class="w">                </span><span class="n">Motor_SetPWM</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">LeftPWM</span><span class="p">);</span>
+<span class="w">                </span><span class="n">Motor_SetPWM</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">RightPWM</span><span class="p">);</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">Motor_SetPWM</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span><span class="w"> </span><span class="n">Motor_SetPWM</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span><span class="w"> </span><span class="p">}</span><span class="w">   </span><span class="c1">// 停机时两轮刹车</span>
+</code></pre></div>
+
+<p>差速合成是"加法叠加"：转向不再单独占一路 PWM，而是把左右轮"一加一减"。限幅 ±100 与 PWM 分辨率（ARR=99）一致，防溢出到方向逻辑之外。</p>
+<h3 id="250ms-20hz">（2）50ms 分支：测速 + 速度环/转向环（20Hz）</h3>
+<div class="codehilite"><pre><span></span><code><span class="w">        </span><span class="n">Count1</span><span class="w"> </span><span class="o">++</span><span class="p">;</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">Count1</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">50</span><span class="p">)</span><span class="w">     </span><span class="c1">// 50 × 1ms = 50ms</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">Count1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">            </span><span class="n">LeftSpeed</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">Encoder_Get</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">44.0</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">0.05</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">9.27666</span><span class="p">;</span>
+<span class="w">            </span><span class="n">RightSpeed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Encoder_Get</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">44.0</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">0.05</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">9.27666</span><span class="p">;</span>
+</code></pre></div>
+
+<p>换算链逐项拆：
+- <code>Encoder_Get(n)</code>：50ms 内编码器计数的<strong>增量</strong>（含符号，四倍频计数）；
+- <code>/ 44.0</code>：输出轴转一圈的计数次数 → 得到"转了百分之几圈"；
+- <code>/ 0.05</code>：除以采样周期（秒）→ 得到 <strong>圈/秒</strong>；
+- <code>/ 9.27666</code>：最终标定系数，把"圈/秒"折算成控制器用的统一速度单位（与轮径、减速比相关的实测值）。</p>
+<p><strong>44 和 9.27666 都是标定值</strong>：让车架空、手转轮子一圈，读屏上的计数即可验证 44；9.27666 只要左右一致、标度统一即可（它会被速度环 Kp 吸收），<strong>关键在于左右轮用同一系数</strong>，否则走直线会跑偏。</p>
+<div class="codehilite"><pre><span></span><code><span class="w">            </span><span class="n">AveSpeed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">LeftSpeed</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">RightSpeed</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">2.0</span><span class="p">;</span><span class="w">   </span><span class="c1">// 平均速度 → 速度环反馈</span>
+<span class="w">            </span><span class="n">DifSpeed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LeftSpeed</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">RightSpeed</span><span class="p">;</span><span class="w">           </span><span class="c1">// 速度差   → 转向环反馈</span>
+
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">RunFlag</span><span class="p">)</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="n">SpeedPID</span><span class="p">.</span><span class="n">Actual</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AveSpeed</span><span class="p">;</span>
+<span class="w">                </span><span class="n">PID_Update</span><span class="p">(</span><span class="o">&amp;</span><span class="n">SpeedPID</span><span class="p">);</span>
+<span class="w">                </span><span class="n">AnglePID</span><span class="p">.</span><span class="n">Target</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SpeedPID</span><span class="p">.</span><span class="n">Out</span><span class="p">;</span><span class="w">      </span><span class="c1">// ★ 串级枢纽：外环输出 = 内环目标</span>
+
+<span class="w">                </span><span class="n">TurnPID</span><span class="p">.</span><span class="n">Actual</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DifSpeed</span><span class="p">;</span>
+<span class="w">                </span><span class="n">PID_Update</span><span class="p">(</span><span class="o">&amp;</span><span class="n">TurnPID</span><span class="p">);</span>
+<span class="w">                </span><span class="n">DifPWM</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TurnPID</span><span class="p">.</span><span class="n">Out</span><span class="p">;</span><span class="w">                </span><span class="c1">// 转向环输出直接是差动 PWM</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+</code></pre></div>
+
+<p><code>AnglePID.Target = SpeedPID.Out</code> 是全车最核心的一行：速度偏快 → 外环输出负角度目标 → 直立环让车<strong>主动后仰</strong> → 减速。理解了这行，就理解了平衡车速度控制的全部秘密。转向环同理：给右摇杆目标 → 与 <code>DifSpeed</code> 比较 → 输出 DifPWM 让两轮速度不同。</p>
+<h3 id="3">（3）尾部超时自检（精妙）</h3>
+<div class="codehilite"><pre><span></span><code><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">TIM_GetITStatus</span><span class="p">(</span><span class="n">TIM1</span><span class="p">,</span><span class="w"> </span><span class="n">TIM_IT_Update</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">SET</span><span class="p">)</span><span class="w">   </span><span class="c1">// 处理完了标志又是 SET？</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">TimerErrorFlag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">                            </span><span class="c1">// 说明本次执行 &gt; 1ms，超时</span>
+<span class="w">            </span><span class="n">TIM_ClearITPendingBit</span><span class="p">(</span><span class="n">TIM1</span><span class="p">,</span><span class="w"> </span><span class="n">TIM_IT_Update</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="n">TimerCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TIM_GetCounter</span><span class="p">(</span><span class="n">TIM1</span><span class="p">);</span><span class="w">   </span><span class="c1">// 快照当前计数（0~999），可估算耗时</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>原理：若中断体在 1ms 内跑完，更新标志已清，不会再次 SET；若<strong>超过 1ms</strong>，TIM1 已再次溢出、标志再次置位——在这里被逮个正着。<code>TimerCount</code> 读的是 ARR=999 的递增计数器当前值，配合断点可换算中断执行到此刻已经过去多少 µs。这是无示波器条件下检验实时性的土办法，非常值得学习。</p>
+<hr>
+<p><strong>本章思考</strong>：
+1. 若把 <code>Timer_Init()</code> 挪到 <code>MPU6050_Init()</code> 之前，上电会发生什么？
+2. <code>AngleAcc += 0.5</code> 里 0.5 换一辆车装配后还适用吗？怎么重新测定？
+3. 为什么停止时 <code>Motor_SetPWM(1, 0)</code> 要显式调用，而不是"不调用就不动"？（提示：上次中断留下的 PWM 是多少？）</p>
+<hr>
+<h1 id="2-pid-pidc-pidh">第 2 章 PID 控制器：PID.c / PID.h</h1>
+<h2 id="21-pid_t">2.1 数据结构：一个 PID_t 描述一切</h2>
+<p><a href="file:///e:/BaiduNetdiskDownload/平衡车入门教程资料-江协/程序源码/程序源码-无注释版/平衡车程序/06-平衡车程序优化/User/PID.h">PID.h</a> 用一个结构体把控制器全部状态打包：</p>
+<div class="codehilite"><pre><span></span><code><span class="k">typedef</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">Target</span><span class="p">;</span><span class="w">      </span><span class="c1">// 目标值（设定值 SP）</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">Actual</span><span class="p">;</span><span class="w">      </span><span class="c1">// 反馈值（测量值 PV），每次调用前由外部刷新</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">Actual1</span><span class="p">;</span><span class="w">     </span><span class="c1">// 上一次的反馈值 —— 微分先行专用</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">Out</span><span class="p">;</span><span class="w">         </span><span class="c1">// 输出</span>
+
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">Kp</span><span class="p">,</span><span class="w"> </span><span class="n">Ki</span><span class="p">,</span><span class="w"> </span><span class="n">Kd</span><span class="p">;</span><span class="w">  </span><span class="c1">// 三个增益</span>
+
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">Error0</span><span class="p">;</span><span class="w">      </span><span class="c1">// 本次误差  = Target - Actual</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">Error1</span><span class="p">;</span><span class="w">      </span><span class="c1">// 上次误差（本版本未被微分项使用，保留）</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">ErrorInt</span><span class="p">;</span><span class="w">    </span><span class="c1">// 误差积分器（累加和）</span>
+
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">ErrorIntMax</span><span class="p">,</span><span class="w"> </span><span class="n">ErrorIntMin</span><span class="p">;</span><span class="w">   </span><span class="c1">// 积分限幅（抗饱和）</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">OutMax</span><span class="p">,</span><span class="w"> </span><span class="n">OutMin</span><span class="p">;</span><span class="w">             </span><span class="c1">// 输出限幅</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">OutOffset</span><span class="p">;</span><span class="w">                  </span><span class="c1">// 死区补偿量</span>
+<span class="p">}</span><span class="w"> </span><span class="n">PID_t</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>为什么用结构体 + 指针而不是全局变量？</strong> 三个控制器（Angle/Speed/Turn）字段完全同构，<code>PID_Update(&amp;AnglePID)</code> 传指针即可复用同一份算法代码——这就是"数据与算法分离"。</p>
+<h2 id="22">2.2 从连续公式到离散代码</h2>
+<p>连续 PID：</p>
+<p>$$u(t) = K_p e(t) + K_i \int_0^t e(\tau)d\tau + K_d \frac{de(t)}{dt}$$</p>
+<p>采样周期 T 内离散化（本工程直立环 T=10ms、速度/转向环 T=50ms）：</p>
+<ul>
+<li>积分 → 累加：$\int e \,dt \approx T\sum e_k$，工程上把 T 折进 Ki；</li>
+<li>微分 → 差分：$\frac{de}{dt} \approx \frac{e_k - e_{k-1}}{T}$，T 折进 Kd。</li>
+</ul>
+<p>于是代码中的输出：</p>
+<p>$$Out_k = K_p e_k + K_i \sum_{i} e_i - K_d\,(Actual_k - Actual_{k-1})$$</p>
+<h2 id="23-pid_init">2.3 PID_Init：状态清零的学问</h2>
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">PID_Init</span><span class="p">(</span><span class="n">PID_t</span><span class="w"> </span><span class="o">*</span><span class="n">p</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">Target</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">Actual</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">Actual1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">     </span><span class="c1">// 不清它，第一次微分 = Actual - 垃圾值，输出猛跳一下</span>
+<span class="w">    </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">Out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">Error0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">Error1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">ErrorInt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">    </span><span class="c1">// 积分器清零：上次运行的累积必须作废</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>注意它<strong>不清 Kp/Ki/Kd/限幅</strong>——那些是"参数"，Init 只清"状态"。启动平衡车前对三个控制器各调一次（见 1.5），避免旧积分残留导致起步窜动。</p>
+<h2 id="24-pid_update">2.4 PID_Update 逐行精讲</h2>
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">PID_Update</span><span class="p">(</span><span class="n">PID_t</span><span class="w"> </span><span class="o">*</span><span class="n">p</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">Error1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">Error0</span><span class="p">;</span><span class="w">             </span><span class="c1">// 旧误差存档</span>
+<span class="w">    </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">Error0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">Target</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">Actual</span><span class="p">;</span><span class="w"> </span><span class="c1">// 计算新误差</span>
+</code></pre></div>
+
+<h3 id="1anti-windup">（1）积分项与抗饱和（Anti-Windup）</h3>
+<div class="codehilite"><pre><span></span><code><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">Ki</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">ErrorInt</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">Error0</span><span class="p">;</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">ErrorInt</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">ErrorIntMax</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">ErrorInt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">ErrorIntMax</span><span class="p">;}</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">ErrorInt</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">ErrorIntMin</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">ErrorInt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">ErrorIntMin</span><span class="p">;}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">ErrorInt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+
+<ul>
+<li><strong>积分饱和</strong>是什么：误差长时间同号（如车被手按住），ErrorInt 一路涨。即使误差反向了，巨大的积分累积还要慢慢"泄洪"，输出迟迟回不来——车表现为"抽风几秒才稳"。</li>
+<li><strong>限幅即抗饱和</strong>：给 ErrorInt 设上限，超出就钳住。直立环 ±600 × Ki 0.1 = 积分项最大贡献 ±60 PWM，既有消除稳态倾斜的力量，又不会失控。</li>
+<li><code>Ki==0</code> 时干脆清零积分器：速度环若临时把 Ki 调成 0 在线测试，积分器自动归零，避免"看起来关了其实还在输出"的迷惑。</li>
+</ul>
+<h3 id="2-kdactual-actual1">（2）微分先行：<code>-Kd*(Actual - Actual1)</code> 的深意</h3>
+<div class="codehilite"><pre><span></span><code><span class="w">    </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">Out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">Kp</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">Error0</span>
+<span class="w">           </span><span class="o">+</span><span class="w"> </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">Ki</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">ErrorInt</span>
+<span class="c1">//         + p-&gt;Kd * (p-&gt;Error0 - p-&gt;Error1);     // 标准（被注释）：对误差微分</span>
+<span class="w">           </span><span class="o">-</span><span class="w"> </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">Kd</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">Actual</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">Actual1</span><span class="p">);</span><span class="w">     </span><span class="c1">// 实际采用：对测量值微分</span>
+</code></pre></div>
+
+<p>标准差分 $\frac{e_k-e_{k-1}}{T}$ 在<strong>目标值突变</strong>时会产生巨大的微分尖峰（derivative kick）：平衡车的 AnglePID.Target 每个速度环周期都被改写（50ms 一次阶跃），若对误差微分，每次阶跃 D 项都轰一下输出，车会"一冲一冲"。</p>
+<p>微分先行把微分对象换成<strong>测量值 Actual</strong>：目标平滑变化时不尖峰；车身姿态突变（真正需要阻尼的时刻）时，Actual 的变化照样产生有效阻尼。注意前面的<strong>负号</strong>：误差 = Target − Actual，对 Actual 微分等价于对误差微分取负号（Target 变化不参与），公式上 <code>-Kd·ΔActual = Kd·(e_k − e_{k-1}) − Kd·ΔTarget</code>，正好消去了 ΔTarget 项。</p>
+<h3 id="3-outoffset">（3）死区补偿 OutOffset</h3>
+<div class="codehilite"><pre><span></span><code><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">Out</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">Out</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">OutOffset</span><span class="p">;}</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">Out</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">Out</span><span class="w"> </span><span class="o">-=</span><span class="w"> </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">OutOffset</span><span class="p">;}</span>
+</code></pre></div>
+
+<p>电机有<strong>死区</strong>：PWM 太小（要克服静摩擦 + 驱动管压降）轮子不动。表现为小信号时"输出 10 和输出 0 效果一样"。补偿方法：只要输出非零，就额外加（正向）或减（反向）一点，把输出"垫"过死区。<code>Out==0</code> 时不补偿——静止就是静止，不加偏置。</p>
+<blockquote>
+<p>注意 <code>OutOffset</code> 只对直立环有意义（默认 3），对速度环/转向环（输出是目标值而非 PWM）应为 0。</p>
+</blockquote>
+<h3 id="4">（4）输出限幅与状态存档</h3>
+<div class="codehilite"><pre><span></span><code><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">Out</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">OutMax</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">Out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">OutMax</span><span class="p">;}</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">Out</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">OutMin</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">Out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">OutMin</span><span class="p">;}</span>
+
+<span class="w">    </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">Actual1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">Actual</span><span class="p">;</span><span class="w">    </span><span class="c1">// 保存本次反馈，供下次微分用</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>限幅放在<strong>所有计算之后</strong>：内部 ErrorInt 仍是真实值，只是输出被钳住——这样退饱和时积分器状态是连续的。</p>
+<p><strong>一次完整调用的时序</strong>：外部填 <code>p-&gt;Actual</code> → Update 算出 <code>p-&gt;Out</code> → 外部取走 Out。.Target 由更上层（速度环输出、遥控）写入。</p>
+<hr>
+<h1 id="3-myi2c-mpu6050">第 3 章 姿态感知：MyI2C / MPU6050 / 互补滤波</h1>
+<h2 id="31">3.1 为什么必须两种传感器互补</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>加速度计 → AngleAcc</th>
+<th>陀螺仪 → AngleGyro</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>原理</td>
+<td>测重力在各轴的分量，atan2 反解倾角</td>
+<td>测角速度，累加（积分）成角度</td>
+</tr>
+<tr>
+<td>静止</td>
+<td>很准</td>
+<td>漂移（零偏被积分放大）</td>
+</tr>
+<tr>
+<td>运动</td>
+<td>混入车体加速度，瞬间大偏差</td>
+<td>不受线加速度影响，平滑</td>
+</tr>
+<tr>
+<td>频域特性</td>
+<td>低频准、高频噪声大 → <strong>低通</strong></td>
+<td>高频准、低频漂移 → <strong>高通</strong></td>
+</tr>
+</tbody>
+</table>
+<p>单独用任何一个都立不起来。互补滤波 <code>Angle = α·AngleAcc + (1−α)·AngleGyro</code> 恰好让两者各取所长（详见 3.6）。</p>
+<h2 id="32-i2c">3.2 软件 I2C 的地基：开漏输出</h2>
+<p><a href="file:///e:/BaiduNetdiskDownload/平衡车入门教程资料-江协/程序源码/程序源码-无注释版/平衡车程序/06-平衡车程序优化/Hardware/MyI2C.c">MyI2C.c</a> 使用 PB10(SCL)/PB11(SDA)，配置为<strong>开漏输出</strong>（GPIO_Mode_Out_OD）+ 外部上拉：</p>
+<ul>
+<li>开漏模式只能主动输出低电平，输出"1"时引脚悬空、靠上拉电阻拉高；</li>
+<li>这实现了 I2C 的<strong>线与</strong>逻辑：任何一个器件拉低，总线就是低——这是 ACK、时钟拉伸、多主机仲裁的基础；</li>
+<li>读 SDA 前必须先写 1（释放总线），否则自己钳着低电平永远读到 0。</li>
+</ul>
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">MyI2C_W_SCL</span><span class="p">(</span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">BitValue</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">GPIO_WriteBit</span><span class="p">(</span><span class="n">GPIOB</span><span class="p">,</span><span class="w"> </span><span class="n">GPIO_Pin_10</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">BitAction</span><span class="p">)</span><span class="n">BitValue</span><span class="p">);</span><span class="w"> </span><span class="p">}</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">MyI2C_W_SDA</span><span class="p">(</span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">BitValue</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">GPIO_WriteBit</span><span class="p">(</span><span class="n">GPIOB</span><span class="p">,</span><span class="w"> </span><span class="n">GPIO_Pin_11</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">BitAction</span><span class="p">)</span><span class="n">BitValue</span><span class="p">);</span><span class="w"> </span><span class="p">}</span>
+<span class="kt">uint8_t</span><span class="w"> </span><span class="nf">MyI2C_R_SDA</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="w">          </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">GPIO_ReadInputDataBit</span><span class="p">(</span><span class="n">GPIOB</span><span class="p">,</span><span class="w"> </span><span class="n">GPIO_Pin_11</span><span class="p">);</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+
+<p><code>(BitAction)BitValue</code> 把 0/1 强转成标准库枚举。注释掉的 <code>Delay_us(10)</code>：72MHz 的 M3 翻转 GPIO 约 100ns 级，远快于 MPU6050 承受的 400kHz 上限其实也够慢（软 I2C 每字节 9 个循环+函数调用开销，实测约 100~200kHz），72MHz 下无需延时。<strong>若换成 180MHz 的 F4/H7 就必须打开延时</strong>，这正是注释留着的意义。</p>
+<p>初始化：</p>
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">MyI2C_Init</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">RCC_APB2PeriphClockCmd</span><span class="p">(</span><span class="n">RCC_APB2Periph_GPIOB</span><span class="p">,</span><span class="w"> </span><span class="n">ENABLE</span><span class="p">);</span><span class="w">   </span><span class="c1">// 先开时钟！忘了这行=寄存器全无效</span>
+<span class="w">    </span><span class="n">GPIO_InitTypeDef</span><span class="w"> </span><span class="n">GPIO_InitStructure</span><span class="p">;</span>
+<span class="w">    </span><span class="n">GPIO_InitStructure</span><span class="p">.</span><span class="n">GPIO_Mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GPIO_Mode_Out_OD</span><span class="p">;</span><span class="w">        </span><span class="c1">// 开漏</span>
+<span class="w">    </span><span class="n">GPIO_InitStructure</span><span class="p">.</span><span class="n">GPIO_Pin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GPIO_Pin_10</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">GPIO_Pin_11</span><span class="p">;</span>
+<span class="w">    </span><span class="n">GPIO_InitStructure</span><span class="p">.</span><span class="n">GPIO_Speed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GPIO_Speed_50MHz</span><span class="p">;</span>
+<span class="w">    </span><span class="n">GPIO_Init</span><span class="p">(</span><span class="n">GPIOB</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">GPIO_InitStructure</span><span class="p">);</span>
+<span class="w">    </span><span class="n">GPIO_SetBits</span><span class="p">(</span><span class="n">GPIOB</span><span class="p">,</span><span class="w"> </span><span class="n">GPIO_Pin_10</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">GPIO_Pin_11</span><span class="p">);</span><span class="w">         </span><span class="c1">// 释放两根线（总线空闲态=全高）</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h2 id="33-i2c">3.3 六个协议函数：把 I2C 时序图"翻译"成代码</h2>
+<p><strong>起始条件 Start</strong>——SCL 高电平期间 SDA 产生下降沿：</p>
+<div class="codehilite"><pre><span></span><code>SDA ──╮      SDA: 1→0（在 SCL=1 时拉低）
+      ╰────
+SCL ──────    SCL: 先保证 1，随后拉低 0（占用总线，方便拼接后续时序）
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">MyI2C_Start</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">MyI2C_W_SDA</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span><span class="w">   </span><span class="c1">// 释放 SDA，确保它当前为高（若上一位结束在低，先放上去）</span>
+<span class="w">    </span><span class="n">MyI2C_W_SCL</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span><span class="w">   </span><span class="c1">// 释放 SCL，确保高</span>
+<span class="w">    </span><span class="n">MyI2C_W_SDA</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span><span class="w">   </span><span class="c1">// SCL 高电平期间拉低 SDA → 起始信号</span>
+<span class="w">    </span><span class="n">MyI2C_W_SCL</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span><span class="w">   </span><span class="c1">// 拉低 SCL：①占住总线 ②为发送第一个位做准备（数据在 SCL 低时变化）</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p><strong>停止条件 Stop</strong>——SCL 高电平期间 SDA 产生上升沿：</p>
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">MyI2C_Stop</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">MyI2C_W_SDA</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span><span class="w">   </span><span class="c1">// 先确保 SDA 低</span>
+<span class="w">    </span><span class="n">MyI2C_W_SCL</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span><span class="w">   </span><span class="c1">// 抬 SCL</span>
+<span class="w">    </span><span class="n">MyI2C_W_SDA</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span><span class="w">   </span><span class="c1">// SCL 高时释放 SDA → 停止信号</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p><strong>发送一字节</strong>——高位先行（MSB first），数据在 SCL 低电平期间变化、高电平期间被从机采样：</p>
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">MyI2C_SendByte</span><span class="p">(</span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">Byte</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">8</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">++</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">MyI2C_W_SDA</span><span class="p">(</span><span class="o">!!</span><span class="p">(</span><span class="n">Byte</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="p">(</span><span class="mh">0x80</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">i</span><span class="p">)));</span><span class="w">  </span><span class="c1">// 掩码取第 i 位（从最高位起）</span>
+<span class="w">        </span><span class="n">MyI2C_W_SCL</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span><span class="w">                       </span><span class="c1">// 从机在此读走该位</span>
+<span class="w">        </span><span class="n">MyI2C_W_SCL</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span><span class="w">                       </span><span class="c1">// 拉低，允许切换下一位</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p><code>!!(Byte &amp; (0x80 &gt;&gt; i))</code> 是精髓：<code>Byte &amp; 0x80</code> 得到 <code>0x80</code> 或 <code>0x00</code>（不是 0/1），第一个 <code>!</code> 把一切非零变 0、零变 1，第二个 <code>!</code> 再翻转回来 → 严格得到 0/1。<strong>发送方永远不读 ACK 之外的 SDA</strong>，全程只管推。</p>
+<p><strong>接收一字节</strong>——主机交出 SDA 控制权：</p>
+<div class="codehilite"><pre><span></span><code><span class="kt">uint8_t</span><span class="w"> </span><span class="nf">MyI2C_ReceiveByte</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">Byte</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mh">0x00</span><span class="p">;</span>
+<span class="w">    </span><span class="n">MyI2C_W_SDA</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span><span class="w">                    </span><span class="c1">// 释放 SDA！开漏下不释放就读不到从机数据</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">8</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">++</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">MyI2C_W_SCL</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span><span class="w">                          </span><span class="c1">// 时钟高</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">MyI2C_R_SDA</span><span class="p">())</span><span class="w"> </span><span class="p">{</span><span class="n">Byte</span><span class="w"> </span><span class="o">|=</span><span class="w"> </span><span class="p">(</span><span class="mh">0x80</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">i</span><span class="p">);}</span><span class="w"> </span><span class="c1">// 采样，按位拼装</span>
+<span class="w">        </span><span class="n">MyI2C_W_SCL</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">Byte</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p><strong>应答的两个方向</strong>：<code>SendAck(AckBit)</code> 主机发应答（0=ACK 继续收，1=NACK 结束收）；<code>ReceiveAck()</code> 主机读从机应答（返回 0 表示从机收到了）。两者内部都是"放好 SDA → 打一拍 SCL"。</p>
+<p>时序全景（写 MPU6050 一帧）：</p>
+<div class="codehilite"><pre><span></span><code>Start → 1101000+0(0xD0) ACK → 寄存器地址 ACK → 数据 ACK → Stop
+</code></pre></div>
+
+<h2 id="34-mpu6050">3.4 MPU6050 寄存器地图</h2>
+<p><a href="file:///e:/BaiduNetdiskDownload/平衡车入门教程资料-江协/程序源码/程序源码-无注释版/平衡车程序/06-平衡车程序优化/Hardware/MPU6050_Reg.h">MPU6050_Reg.h</a> 定义了本工程用到的寄存器：</p>
+<table>
+<thead>
+<tr>
+<th>地址</th>
+<th>名称</th>
+<th>作用</th>
+<th>本工程写入值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0x19</td>
+<td>SMPLRT_DIV</td>
+<td>采样率分频：Rate=内部率/(1+DIV)</td>
+<td>0x07 → 1kHz/8=125Hz</td>
+</tr>
+<tr>
+<td>0x1A</td>
+<td>CONFIG</td>
+<td>DLPF 低通滤波配置</td>
+<td>0x00 → 滤波最轻</td>
+</tr>
+<tr>
+<td>0x1B</td>
+<td>GYRO_CONFIG</td>
+<td>陀螺量程</td>
+<td>0x18 → ±2000°/s（16.4 LSB/°/s）</td>
+</tr>
+<tr>
+<td>0x1C</td>
+<td>ACCEL_CONFIG</td>
+<td>加计量程</td>
+<td>0x18 → ±16g（2048 LSB/g）</td>
+</tr>
+<tr>
+<td>0x3B~0x40</td>
+<td>ACCEL_X/Y/ZOUT_H/L</td>
+<td>加速度 3×2 字节</td>
+<td>只读</td>
+</tr>
+<tr>
+<td>0x41/0x42</td>
+<td>TEMP_OUT_H/L</td>
+<td>温度</td>
+<td>被跳过</td>
+</tr>
+<tr>
+<td>0x43~0x48</td>
+<td>GYRO_X/Y/ZOUT_H/L</td>
+<td>角速度 3×2 字节</td>
+<td>只读</td>
+</tr>
+<tr>
+<td>0x6B</td>
+<td>PWR_MGMT_1</td>
+<td>电源管理/时钟源</td>
+<td>0x01 → 唤醒+PLL 时钟</td>
+</tr>
+<tr>
+<td>0x6C</td>
+<td>PWR_MGMT_2</td>
+<td>各轴待机</td>
+<td>0x00 → 六轴全开</td>
+</tr>
+<tr>
+<td>0x75</td>
+<td>WHO_AM_I</td>
+<td>器件 ID（应读回 0x68）</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p>数据寄存器是<strong>连续地址</strong>这一事实，正是"突发读 14 字节"能一次拿全 6 轴的原因。</p>
+<h2 id="35-mpu6050c">3.5 MPU6050.c 逐函数精讲</h2>
+<p><a href="file:///e:/BaiduNetdiskDownload/平衡车入门教程资料-江协/程序源码/程序源码-无注释版/平衡车程序/06-平衡车程序优化/Hardware/MPU6050.c">MPU6050.c</a> 的从机地址 <code>0xD0</code> = <code>1101000 &lt;&lt; 1 | RW(0)</code>，即 7 位地址 0x68 + 写标志。</p>
+<p><strong>指定地址写一个寄存器</strong>：</p>
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">MPU6050_WriteReg</span><span class="p">(</span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">RegAddress</span><span class="p">,</span><span class="w"> </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">Data</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">MyI2C_Start</span><span class="p">();</span>
+<span class="w">    </span><span class="n">MyI2C_SendByte</span><span class="p">(</span><span class="n">MPU6050_ADDRESS</span><span class="p">);</span><span class="w">  </span><span class="n">MyI2C_ReceiveAck</span><span class="p">();</span><span class="w">  </span><span class="c1">// 呼叫从机（写模式）</span>
+<span class="w">    </span><span class="n">MyI2C_SendByte</span><span class="p">(</span><span class="n">RegAddress</span><span class="p">);</span><span class="w">       </span><span class="n">MyI2C_ReceiveAck</span><span class="p">();</span><span class="w">  </span><span class="c1">// 指定寄存器（地址指针）</span>
+<span class="w">    </span><span class="n">MyI2C_SendByte</span><span class="p">(</span><span class="n">Data</span><span class="p">);</span><span class="w">             </span><span class="n">MyI2C_ReceiveAck</span><span class="p">();</span><span class="w">  </span><span class="c1">// 写入数据</span>
+<span class="w">    </span><span class="n">MyI2C_Stop</span><span class="p">();</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p><strong>读寄存器 = 写地址 + 重复起始 + 读</strong>：</p>
+<div class="codehilite"><pre><span></span><code><span class="kt">uint8_t</span><span class="w"> </span><span class="nf">MPU6050_ReadReg</span><span class="p">(</span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">RegAddress</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="p">...</span>
+<span class="w">    </span><span class="n">MyI2C_Start</span><span class="p">();</span><span class="w">                          </span><span class="c1">// ★ 重复起始 Sr：不发 Stop 直接再 Start</span>
+<span class="w">    </span><span class="n">MyI2C_SendByte</span><span class="p">(</span><span class="n">MPU6050_ADDRESS</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="mh">0x01</span><span class="p">);</span><span class="w"> </span><span class="c1">// 最低位 1 = 读模式</span>
+<span class="w">    </span><span class="n">MyI2C_ReceiveAck</span><span class="p">();</span>
+<span class="w">    </span><span class="n">Data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MyI2C_ReceiveByte</span><span class="p">();</span>
+<span class="w">    </span><span class="n">MyI2C_SendAck</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span><span class="w">                       </span><span class="c1">// NACK：只读一个字节，告诉从机到此为止</span>
+<span class="w">    </span><span class="n">MyI2C_Stop</span><span class="p">();</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p><code>MPU6050_ADDRESS | 0x01</code>：0xD0 是"地址+写"，或上 0x01 变 0xD1 即"地址+读"。<strong>为什么用重复起始而不是 Stop+Start？</strong> 读操作要"先写寄存器地址、再读数据"，中间不能让出总线，否则其他主机（这里没有，但协议如此设计）可能插队、从机地址指针被改变。</p>
+<p><strong>突发读 14 字节（GetData 的底层）</strong>：</p>
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">MPU6050_ReadRegs</span><span class="p">(</span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">RegAddress</span><span class="p">,</span><span class="w"> </span><span class="kt">uint8_t</span><span class="w"> </span><span class="o">*</span><span class="n">DataArray</span><span class="p">,</span><span class="w"> </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">Count</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="p">...</span><span class="n">同上</span><span class="err">，</span><span class="n">重复起始切读模式</span><span class="p">...</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">Count</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">++</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">DataArray</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MyI2C_ReceiveByte</span><span class="p">();</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">Count</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w">  </span><span class="n">MyI2C_SendAck</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span><span class="w">   </span><span class="c1">// 前 N-1 个字节回 ACK（还要继续）</span>
+<span class="w">        </span><span class="k">else</span><span class="w">                </span><span class="n">MyI2C_SendAck</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span><span class="w">   </span><span class="c1">// 最后一个回 NACK（收完了）</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">MyI2C_Stop</span><span class="p">();</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p><strong>初始化六连</strong>（对应上表）：</p>
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">MPU6050_Init</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">MyI2C_Init</span><span class="p">();</span>
+<span class="w">    </span><span class="n">MPU6050_WriteReg</span><span class="p">(</span><span class="n">MPU6050_PWR_MGMT_1</span><span class="p">,</span><span class="w"> </span><span class="mh">0x01</span><span class="p">);</span><span class="w">    </span><span class="c1">// 退出睡眠，时钟选 PLL（比内部 RC 稳）</span>
+<span class="w">    </span><span class="n">MPU6050_WriteReg</span><span class="p">(</span><span class="n">MPU6050_PWR_MGMT_2</span><span class="p">,</span><span class="w"> </span><span class="mh">0x00</span><span class="p">);</span><span class="w">    </span><span class="c1">// 六轴全部不待机</span>
+<span class="w">    </span><span class="n">MPU6050_WriteReg</span><span class="p">(</span><span class="n">MPU6050_SMPLRT_DIV</span><span class="p">,</span><span class="w"> </span><span class="mh">0x07</span><span class="p">);</span><span class="w">    </span><span class="c1">// 采样率 1kHz/(1+7)=125Hz</span>
+<span class="w">    </span><span class="n">MPU6050_WriteReg</span><span class="p">(</span><span class="n">MPU6050_CONFIG</span><span class="p">,</span><span class="w"> </span><span class="mh">0x00</span><span class="p">);</span><span class="w">        </span><span class="c1">// DLPF 配置 0</span>
+<span class="w">    </span><span class="n">MPU6050_WriteReg</span><span class="p">(</span><span class="n">MPU6050_GYRO_CONFIG</span><span class="p">,</span><span class="w"> </span><span class="mh">0x18</span><span class="p">);</span><span class="w">   </span><span class="c1">// 陀螺 ±2000°/s</span>
+<span class="w">    </span><span class="n">MPU6050_WriteReg</span><span class="p">(</span><span class="n">MPU6050_ACCEL_CONFIG</span><span class="p">,</span><span class="w"> </span><span class="mh">0x18</span><span class="p">);</span><span class="w">  </span><span class="c1">// 加计 ±16g</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>量程选择的权衡：量程越大，同样 16 位能分辨的阶梯越粗（灵敏度越低）。±2000°/s 是平衡车常用的"够用不饱和"选择；加计 ±16g 能扛住碰撞冲击不削顶。</p>
+<p><strong>GetData 的优化版本</strong>：</p>
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">MPU6050_GetData</span><span class="p">(</span><span class="kt">int16_t</span><span class="w"> </span><span class="o">*</span><span class="n">AccX</span><span class="p">,</span><span class="w"> </span><span class="p">...,</span><span class="w"> </span><span class="kt">int16_t</span><span class="w"> </span><span class="o">*</span><span class="n">GyroZ</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">Data</span><span class="p">[</span><span class="mi">14</span><span class="p">];</span>
+<span class="w">    </span><span class="n">MPU6050_ReadRegs</span><span class="p">(</span><span class="n">MPU6050_ACCEL_XOUT_H</span><span class="p">,</span><span class="w"> </span><span class="n">Data</span><span class="p">,</span><span class="w"> </span><span class="mi">14</span><span class="p">);</span><span class="w">  </span><span class="c1">// 一次 I2C 读 14 字节</span>
+<span class="w">    </span><span class="o">*</span><span class="n">AccX</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">Data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">8</span><span class="p">)</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Data</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span><span class="w">    </span><span class="c1">// 高字节在前（大端）</span>
+<span class="w">    </span><span class="o">*</span><span class="n">AccY</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">Data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">8</span><span class="p">)</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Data</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
+<span class="w">    </span><span class="o">*</span><span class="n">AccZ</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">Data</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">8</span><span class="p">)</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Data</span><span class="p">[</span><span class="mi">5</span><span class="p">];</span>
+<span class="w">    </span><span class="c1">//      Data[6]/Data[7] 是温度，跳过</span>
+<span class="w">    </span><span class="o">*</span><span class="n">GyroX</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">Data</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">8</span><span class="p">)</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Data</span><span class="p">[</span><span class="mi">9</span><span class="p">];</span>
+<span class="w">    </span><span class="o">*</span><span class="n">GyroY</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">Data</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">8</span><span class="p">)</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Data</span><span class="p">[</span><span class="mi">11</span><span class="p">];</span>
+<span class="w">    </span><span class="o">*</span><span class="n">GyroZ</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">Data</span><span class="p">[</span><span class="mi">12</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">8</span><span class="p">)</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Data</span><span class="p">[</span><span class="mi">13</span><span class="p">];</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>对比注释掉的旧版（6 次单字节读，每次完整 Start/地址/地址指针）：新版<strong>一次事务拿全</strong>，I2C 开销降为 1/6。中断里每 10ms 调用一次，这笔账不小。<code>int16_t</code> 接住 <code>(H&lt;&lt;8)|L</code> 自动获得补码语义（负角速度直接是负数）。</p>
+<h2 id="36-001">3.6 互补滤波系数 0.01 的推导</h2>
+<p>融合公式按周期展开：</p>
+<div class="codehilite"><pre><span></span><code>Angle[k] = 0.01·AngleAcc[k] + 0.99·(Angle[k-1] + ω·T)
+</code></pre></div>
+
+<p>把它看成两个滤波器：
+- 对陀螺通路：<code>y[k] = 0.99·(y[k-1] + x[k]·T)</code>——一阶高通（直流漂移每周期衰减 1%）；
+- 对加计通路：<code>y[k] = 0.01·x[k] + 0.99·y[k-1]</code>——一阶低通，截止频率 $f_c \approx \frac{0.01}{2\pi \cdot 0.01s} \approx 0.16\,\text{Hz}$，时间常数 τ ≈ 0.99s。</p>
+<p>物理图像：<strong>1 秒以内信陀螺</strong>（车身晃动、控制动作都发生在这个尺度），<strong>1 秒以上信加计</strong>（把陀螺的漂移慢慢拉回真值）。α 取太大会跟着加计抖，取太小漂移收敛慢——0.01 是平衡车的经典取值。</p>
+<hr>
+<p><strong>本章思考</strong>：
+1. 为什么读一个寄存器要用重复起始，而不能 Stop 后重新 Start 写地址再读？
+2. 若陀螺量程改成 ±500°/s，<code>GY/32768*2000</code> 这行要怎么改？零偏 16 还成立吗？
+3. 突发读为什么"前 N−1 个 ACK、最后一个 NACK"？如果全部 NACK 会发生什么？</p>
+<hr>
+<h1 id="4-pwm-motor-encoder">第 4 章 执行机构：PWM / Motor / Encoder</h1>
+<h2 id="41-pwmc20khz">4.1 PWM.c：20kHz 调速的诞生过程</h2>
+<p><a href="file:///e:/BaiduNetdiskDownload/平衡车入门教程资料-江协/程序源码/程序源码-无注释版/平衡车程序/06-平衡车程序优化/Hardware/PWM.c">PWM.c</a> 用 TIM2 的 CH1/CH2 输出两路 PWM（PA0/PA1）。</p>
+<p><strong>频率计算逐步演示</strong>：</p>
+<div class="codehilite"><pre><span></span><code>计数时钟 = 72MHz
+PSC = 36-1      → 计数频率 = 72MHz / 36 = 2MHz（每 0.5µs 计一个数）
+ARR = 100-1     → 从 0 数到 99 共 100 步，溢出即一个 PWM 周期
+PWM 频率  = 2MHz / 100 = 20kHz ✓（人耳听不见，电机不啸叫）
+PWM 分辨率 = 100 级（对应代码里的 PWM 值域 0~99）
+</code></pre></div>
+
+<p><strong>为什么是 20kHz？</strong> 太低（&lt;16kHz）电机会发出可闻啸叫；太高开关损耗大、MOS 驱动发热。20kHz 是直流电机调速的黄金频率。</p>
+<div class="codehilite"><pre><span></span><code><span class="n">GPIO_InitStructure</span><span class="p">.</span><span class="n">GPIO_Mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GPIO_Mode_AF_PP</span><span class="p">;</span><span class="w">   </span><span class="c1">// 复用推挽：引脚控制权交给片上外设 TIM2</span>
+</code></pre></div>
+
+<p>PWM1 模式（<code>TIM_OCMode_PWM1</code>）：<code>CNT &lt; CCR</code> 时输出有效电平（高），<code>CNT ≥ CCR</code> 输出无效。所以 <strong>CCR 越大占空比越大</strong>——<code>PWM_SetCompare1(x)</code> 的 x 就是占空比 = x%。库函数 <code>TIM_SetCompare1</code> 仅一行：写 CCR1 寄存器，随时可改、下个周期生效。</p>
+<p><code>TIM_OCStructInit(&amp;...)</code> 先填默认值再改三项，避免结构体残留栈垃圾（标准库的惯用法）。</p>
+<h2 id="42-motorc-h">4.2 Motor.c：有符号速度 → H 桥方向 + 占空比</h2>
+<p>直流电机换向靠 <strong>H 桥</strong>（板上驱动芯片如 TB6612/DRV8833）：IN1=1、IN2=0 正转；IN1=0、IN2=1 反转；IN1=IN2=0 滑行。PWMA/PWMB 引脚上的 PWM 决定速度。</p>
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">Motor_Init</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">RCC_APB2PeriphClockCmd</span><span class="p">(</span><span class="n">RCC_APB2Periph_GPIOB</span><span class="p">,</span><span class="w"> </span><span class="n">ENABLE</span><span class="p">);</span>
+<span class="w">    </span><span class="n">GPIO_InitTypeDef</span><span class="w"> </span><span class="n">GPIO_InitStructure</span><span class="p">;</span>
+<span class="w">    </span><span class="n">GPIO_InitStructure</span><span class="p">.</span><span class="n">GPIO_Mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GPIO_Mode_Out_PP</span><span class="p">;</span><span class="w">   </span><span class="c1">// 方向脚用普通推挽输出</span>
+<span class="w">    </span><span class="n">GPIO_InitStructure</span><span class="p">.</span><span class="n">GPIO_Pin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GPIO_Pin_12</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">GPIO_Pin_13</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">GPIO_Pin_14</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">GPIO_Pin_15</span><span class="p">;</span>
+<span class="w">    </span><span class="p">...</span>
+<span class="w">    </span><span class="n">PWM_Init</span><span class="p">();</span><span class="w">     </span><span class="c1">// PWM 通道随后就绪</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">Motor_SetPWM</span><span class="p">(</span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="kt">int8_t</span><span class="w"> </span><span class="n">PWM</span><span class="p">)</span><span class="w">   </span><span class="c1">// 注意入参是 int8_t：-128~127</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">PWM</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="n">PWM</span><span class="p">;</span><span class="w">                         </span><span class="c1">// ★ 镜像补偿</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">PWM</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w">     </span><span class="c1">// 定义"正转"方向</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">GPIO_SetBits</span><span class="p">(</span><span class="n">GPIOB</span><span class="p">,</span><span class="w"> </span><span class="n">GPIO_Pin_12</span><span class="p">);</span><span class="w">      </span><span class="c1">// IN1=1</span>
+<span class="w">            </span><span class="n">GPIO_ResetBits</span><span class="p">(</span><span class="n">GPIOB</span><span class="p">,</span><span class="w"> </span><span class="n">GPIO_Pin_13</span><span class="p">);</span><span class="w">    </span><span class="c1">// IN2=0</span>
+<span class="w">            </span><span class="n">PWM_SetCompare1</span><span class="p">(</span><span class="n">PWM</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">else</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">GPIO_ResetBits</span><span class="p">(</span><span class="n">GPIOB</span><span class="p">,</span><span class="w"> </span><span class="n">GPIO_Pin_12</span><span class="p">);</span><span class="w">    </span><span class="c1">// IN1=0</span>
+<span class="w">            </span><span class="n">GPIO_SetBits</span><span class="p">(</span><span class="n">GPIOB</span><span class="p">,</span><span class="w"> </span><span class="n">GPIO_Pin_13</span><span class="p">);</span><span class="w">      </span><span class="c1">// IN2=1</span>
+<span class="w">            </span><span class="n">PWM_SetCompare1</span><span class="p">(</span><span class="o">-</span><span class="n">PWM</span><span class="p">);</span><span class="w">                 </span><span class="c1">// 取负得绝对值再给 CCR</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/* 同构，Pin14/15 + CCR2 */</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>两个要点：</p>
+<ol>
+<li><strong><code>PWM = -PWM</code> 镜像补偿</strong>：左右电机在车上对脸安装，同样的"电正转"一个让车向前一个让车向后。这里对两个电机入参都取负，把"轮子物理正转"统一成"车向前"。装到哪侧、线怎么接，都折算进这一行——上层永远只说"向前 50"。</li>
+<li><strong>int8_t 的隐藏风险</strong>：<code>Motor_SetPWM</code> 入参是 <code>int8_t</code>，而中断里传的是 <code>int16_t LeftPWM</code>——隐式截断！好在限幅 ±100 在传参前已完成，100 &lt; 127 安全。<strong>若哪天改了限幅上限超过 127，这里会悄悄溢出翻转</strong>，属于需要警惕的接口约束。</li>
+</ol>
+<h2 id="43-encoderc">4.3 Encoder.c：正交编码与四倍频</h2>
+<h3 id="ab-90">原理：A/B 两相 90° 相位差</h3>
+<p>带磁环编码器的电机输出 A、B 两路脉冲。正转时 A 超前 B 90°，反转时 B 超前 A 90°——<strong>相位关系编码了方向，边沿数量编码了距离</strong>。</p>
+<p>"TI12 四倍频"（<code>TIM_EncoderMode_TI12</code>）：计数器在 <strong>A 的上升沿、A 的下降沿、B 的上升沿、B 的下降沿</strong>都计数一次。一圈的计数从"每相脉冲数"变为 4 倍，分辨率提高 4 倍；计数增减方向由硬件根据 A/B 相位自动判断——正转递增、反转递减，<strong>软件完全不参与辨向</strong>。</p>
+<h3 id="_2">初始化逐行</h3>
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">Encoder_Init</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="cm">/*TIM3 → 左轮，PA6/PA7*/</span>
+<span class="w">    </span><span class="n">RCC_APB1PeriphClockCmd</span><span class="p">(</span><span class="n">RCC_APB1Periph_TIM3</span><span class="p">,</span><span class="w"> </span><span class="n">ENABLE</span><span class="p">);</span>
+<span class="w">    </span><span class="n">RCC_APB2PeriphClockCmd</span><span class="p">(</span><span class="n">RCC_APB2Periph_GPIOA</span><span class="p">,</span><span class="w"> </span><span class="n">ENABLE</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">GPIO_InitStructure</span><span class="p">.</span><span class="n">GPIO_Mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GPIO_Mode_IPU</span><span class="p">;</span><span class="w">   </span><span class="c1">// 上拉输入：编码器集电极开路输出需要</span>
+<span class="w">    </span><span class="n">GPIO_InitStructure</span><span class="p">.</span><span class="n">GPIO_Pin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GPIO_Pin_6</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">GPIO_Pin_7</span><span class="p">;</span>
+<span class="w">    </span><span class="p">...</span>
+
+<span class="w">    </span><span class="n">TIM_TimeBaseInitStructure</span><span class="p">.</span><span class="n">TIM_Period</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">65536</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">    </span><span class="c1">// ARR=65535：16位计数器用满</span>
+<span class="w">    </span><span class="n">TIM_TimeBaseInitStructure</span><span class="p">.</span><span class="n">TIM_Prescaler</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">     </span><span class="c1">// PSC=0：每个边沿计一次，不分频</span>
+<span class="w">    </span><span class="p">...</span>
+<span class="w">    </span><span class="n">TIM_ICInitStructure</span><span class="p">.</span><span class="n">TIM_ICFilter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mh">0xF</span><span class="p">;</span><span class="w">   </span><span class="c1">// 输入滤波最大档！</span>
+<span class="w">    </span><span class="n">TIM_ICInit</span><span class="p">(</span><span class="n">TIM3</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">TIM_ICInitStructure</span><span class="p">);</span><span class="w">   </span><span class="c1">// CH1、CH2 各配一次</span>
+
+<span class="w">    </span><span class="n">TIM_EncoderInterfaceConfig</span><span class="p">(</span><span class="n">TIM3</span><span class="p">,</span><span class="w"> </span><span class="n">TIM_EncoderMode_TI12</span><span class="p">,</span>
+<span class="w">                               </span><span class="n">TIM_ICPolarity_Rising</span><span class="p">,</span><span class="w"> </span><span class="n">TIM_ICPolarity_Rising</span><span class="p">);</span><span class="w"> </span><span class="c1">// 编码器模式</span>
+<span class="w">    </span><span class="n">TIM_Cmd</span><span class="p">(</span><span class="n">TIM3</span><span class="p">,</span><span class="w"> </span><span class="n">ENABLE</span><span class="p">);</span>
+<span class="w">    </span><span class="cm">/*TIM4 → 右轮，PB6/PB7，配置完全同构*/</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>细节深挖：</p>
+<ul>
+<li><strong>ARR=65535 的妙处</strong>：计数器 16 位回绕。倒转 1 格：0 → 65535。用 <code>int16_t</code> 接住 65535，补码正好是 <strong>−1</strong>——硬件回绕与 C 有符号溢出完美互译，加减小增量时天然正确，无需软件处理跨零。</li>
+<li><strong><code>TIM_ICFilter = 0xF</code></strong>：输入捕获滤波器最强档。数字滤波器按 f_DTS 时钟连续采样 N 次（0xF 对应 N=8）全一致才认定有效边沿，过滤电机碳火花/线缆干扰带来的毛刺。毛刺若被误计，速度环反馈就是假的——<strong>编码器滤波宁强勿弱</strong>。</li>
+<li>编码器模式下 CNT 的方向、时钟全部由硬件接管，<code>TIM_CounterMode_Up</code> 等时基参数实际不生效，但库要求填完整结构体。</li>
+</ul>
+<h3 id="_3">读取：读后清零</h3>
+<div class="codehilite"><pre><span></span><code><span class="kt">int16_t</span><span class="w"> </span><span class="nf">Encoder_Get</span><span class="p">(</span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">n</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">int16_t</span><span class="w"> </span><span class="n">Temp</span><span class="p">;</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">Temp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TIM_GetCounter</span><span class="p">(</span><span class="n">TIM3</span><span class="p">);</span><span class="w"> </span><span class="n">TIM_SetCounter</span><span class="p">(</span><span class="n">TIM3</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">Temp</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">Temp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TIM_GetCounter</span><span class="p">(</span><span class="n">TIM4</span><span class="p">);</span><span class="w"> </span><span class="n">TIM_SetCounter</span><span class="p">(</span><span class="n">TIM4</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">Temp</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>读走计数 → 立即清零 → 返回值就是<strong>自上次读取以来的增量</strong>。配合 50ms 的固定读取周期，增量/0.05 = 速度。为什么用增量而不是累计值？累计值会无限增大（64 位才够），且"清零取增量"天然免疫上电时轮子的历史位置。</p>
+<hr>
+<h1 id="5-timer-delay">第 5 章 系统节拍：Timer / Delay / 中断系统</h1>
+<h2 id="51-timerc1khz">5.1 Timer.c：1kHz 心跳</h2>
+<p><a href="file:///e:/BaiduNetdiskDownload/平衡车入门教程资料-江协/程序源码/程序源码-无注释版/平衡车程序/06-平衡车程序优化/System/Timer.c">Timer.c</a> 配置高级定时器 TIM1：</p>
+<div class="codehilite"><pre><span></span><code>PSC = 72-1   → 计数时钟 = 72MHz/72 = 1MHz（1µs 一格）
+ARR = 1000-1 → 数 1000 格溢出一次 → 1ms，即 1kHz 更新中断
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code><span class="n">TIM_ClearFlag</span><span class="p">(</span><span class="n">TIM1</span><span class="p">,</span><span class="w"> </span><span class="n">TIM_FLAG_Update</span><span class="p">);</span><span class="w">   </span><span class="c1">// ★ 关键一行</span>
+<span class="n">TIM_ITConfig</span><span class="p">(</span><span class="n">TIM1</span><span class="p">,</span><span class="w"> </span><span class="n">TIM_IT_Update</span><span class="p">,</span><span class="w"> </span><span class="n">ENABLE</span><span class="p">);</span>
+</code></pre></div>
+
+<p><strong>为什么先清标志再开中断？</strong> <code>TIM_TimeBaseInit</code> 写 PSC/ARR 时会产生一次"更新事件"，把 UIF 标志置上了。若不清除，<code>TIM_ITConfig</code> 一使能，NVIC 立刻响应这个"陈旧中断"——初始化代码还没返回就跳进了中断服务。标准流程：<strong>清标志 → 开中断 → 开定时器</strong>。</p>
+<p><strong>NVIC 优先级配置</strong>：</p>
+<div class="codehilite"><pre><span></span><code><span class="n">NVIC_PriorityGroupConfig</span><span class="p">(</span><span class="n">NVIC_PriorityGroup_2</span><span class="p">);</span><span class="w">  </span><span class="c1">// 2 位抢占 + 2 位响应</span>
+<span class="n">NVIC_InitStructure</span><span class="p">.</span><span class="n">NVIC_IRQChannel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TIM1_UP_IRQn</span><span class="p">;</span>
+<span class="n">NVIC_InitStructure</span><span class="p">.</span><span class="n">NVIC_IRQChannelPreemptionPriority</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span><span class="w">   </span><span class="c1">// 抢占 2</span>
+<span class="n">NVIC_InitStructure</span><span class="p">.</span><span class="n">NVIC_IRQChannelSubPriority</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">          </span><span class="c1">// 响应 1</span>
+</code></pre></div>
+
+<p>全工程优先级格局（数字越小优先级越高）：</p>
+<table>
+<thead>
+<tr>
+<th>中断</th>
+<th>抢占</th>
+<th>响应</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>USART1</td>
+<td>1</td>
+<td>1</td>
+<td>调试串口接收</td>
+</tr>
+<tr>
+<td>USART2</td>
+<td>1</td>
+<td>1</td>
+<td>蓝牙接收</td>
+</tr>
+<tr>
+<td>TIM1_UP</td>
+<td><strong>2</strong></td>
+<td>1</td>
+<td>1kHz 控制节拍</td>
+</tr>
+</tbody>
+</table>
+<p><strong>TIM1 的抢占数字最大 = 抢占优先级最低</strong>，意味着串口中断可以打断 10ms 姿态计算。这是合理的：串口 ISR 只收几个字节（几 µs），打断 1ms 预算无伤；反过来若 TIM1 抢占级最高，控制中断会延迟串口接收，9600 波特率下 1ms 只有约 1 个字节的余量，容易丢字节。<strong>短中断让长中断</strong>是优先级设计的基本功。</p>
+<blockquote>
+<p>函数名 <code>TIM1_UP_IRQHandler</code> 必须与启动文件 <code>startup_stm32f10x_md.s</code> 向量表中的弱定义名字逐字一致，否则中断发生时跳到默认死循环 <code>B .</code>，现象是"程序像卡死"。</p>
+</blockquote>
+<h2 id="52-delayc-systick">5.2 Delay.c：不占用定时器外设的 SysTick 延时</h2>
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">Delay_us</span><span class="p">(</span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">xus</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">SysTick</span><span class="o">-&gt;</span><span class="n">LOAD</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">72</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">xus</span><span class="p">;</span><span class="w">              </span><span class="c1">// 72MHz 下 1µs = 72 个时钟</span>
+<span class="w">    </span><span class="n">SysTick</span><span class="o">-&gt;</span><span class="n">VAL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mh">0x00</span><span class="p">;</span><span class="w">                   </span><span class="c1">// 写 VAL 任意值都会清计数器</span>
+<span class="w">    </span><span class="n">SysTick</span><span class="o">-&gt;</span><span class="n">CTRL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mh">0x00000005</span><span class="p">;</span><span class="w">            </span><span class="c1">// bit0 ENABLE=1 启动 | bit2 CLKSOURCE=1 用 HCLK</span>
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="n">SysTick</span><span class="o">-&gt;</span><span class="n">CTRL</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="mh">0x00010000</span><span class="p">));</span><span class="w">  </span><span class="c1">// 轮询 bit16 COUNTFLAG（读到 1 自动清零）</span>
+<span class="w">    </span><span class="n">SysTick</span><span class="o">-&gt;</span><span class="n">CTRL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mh">0x00000004</span><span class="p">;</span><span class="w">            </span><span class="c1">// ENABLE=0 关闭，省电</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>SysTick 是 Cortex-M 内核自带的 24 位递减计数器，<strong>不属于 STM32 外设，不占用 TIM1~TIM4</strong>。要点：</p>
+<ul>
+<li><code>0x00010000</code> 是第 16 位 COUNTFLAG：计到 0 硬件置 1，读取后自动清零——一行轮询搞定；</li>
+<li>最大延时 = 2²⁴/72 ≈ <strong>233015µs</strong>（LOAD 是 24 位寄存器），所以头文件注明范围；</li>
+<li><code>Delay_ms</code> 用循环叠 1000 次 <code>Delay_us</code>，避开 24 位上限，也避免大数乘法误差。</li>
+</ul>
+<p>本工程把 Delay 用于 OLED 上电稳定延时与 I2C 备用时序，<strong>不用于主流程</strong>（实时系统忌讳忙等）。</p>
+<hr>
+<p><strong>本章思考</strong>：
+1. 把 TIM1 优先级改成抢占 0（最高），可能出现什么新问题？哪个场景下反而应该这么做？
+2. <code>Delay_us(234000)</code> 会发生什么？为什么？</p>
+<hr>
+<h1 id="6-key-led-oled">第 6 章 人机交互：Key / LED / OLED</h1>
+<h2 id="61-keyc">6.1 Key.c：中断驱动的状态机消抖</h2>
+<p>机械按键按下/释放瞬间触点弹跳，电平在几 ms 内抖动多次，GPIO 直接读会把一次按下读成多次。本工程用<strong>定时采样 + 状态机</strong>，彻底不依赖阻塞延时。</p>
+<div class="codehilite"><pre><span></span><code><span class="kt">uint8_t</span><span class="w"> </span><span class="nf">Key_GetState</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="w">     </span><span class="c1">// 纯读硬件：当前哪个键被按着（低电平=按下，上拉输入）</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">GPIO_ReadInputDataBit</span><span class="p">(</span><span class="n">GPIOB</span><span class="p">,</span><span class="w"> </span><span class="n">GPIO_Pin_1</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">GPIO_ReadInputDataBit</span><span class="p">(</span><span class="n">GPIOB</span><span class="p">,</span><span class="w"> </span><span class="n">GPIO_Pin_0</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">GPIO_ReadInputDataBit</span><span class="p">(</span><span class="n">GPIOA</span><span class="p">,</span><span class="w"> </span><span class="n">GPIO_Pin_5</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mi">3</span><span class="p">;</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">GPIO_ReadInputDataBit</span><span class="p">(</span><span class="n">GPIOA</span><span class="p">,</span><span class="w"> </span><span class="n">GPIO_Pin_4</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">Key_Tick</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="w">            </span><span class="c1">// 被 1kHz 中断每 ms 调一次</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">Count</span><span class="p">;</span>
+<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">CurrState</span><span class="p">,</span><span class="w"> </span><span class="n">PrevState</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">Count</span><span class="w"> </span><span class="o">++</span><span class="p">;</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">Count</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">20</span><span class="p">)</span><span class="w">           </span><span class="c1">// 每 20ms 采样一次 → 消抖</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">Count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="n">PrevState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CurrState</span><span class="p">;</span>
+<span class="w">        </span><span class="n">CurrState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Key_GetState</span><span class="p">();</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">CurrState</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">PrevState</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w">   </span><span class="c1">// 上次有键、这次无键 = 释放沿</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">Key_Num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PrevState</span><span class="p">;</span><span class="w">             </span><span class="c1">// 记下"刚释放的是几号键"</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kt">uint8_t</span><span class="w"> </span><span class="nf">Key_GetNum</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="w">       </span><span class="c1">// 主循环取键值，读后清零</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">Temp</span><span class="p">;</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">Key_Num</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">Temp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Key_Num</span><span class="p">;</span><span class="w"> </span><span class="n">Key_Num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">Temp</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>三层设计各有深意：</p>
+<ol>
+<li><strong>20ms 采样间隔即消抖</strong>：抖动只发生在按下/释放后的 5~10ms 内，每 20ms 看一眼，抖动期正好被跳过。这叫"定时采样消抖"，与"延时后重读确认"效果相同但零阻塞。</li>
+<li><strong>释放沿触发</strong>（<code>CurrState==0 &amp;&amp; PrevState!=0</code>）：按住不放只触发<strong>一次</strong>。如果用按下沿，长按 1 秒会被 50 次 20ms 采样误读为……不会（状态机只记边沿），但释放沿的真正好处是<strong>手指离开的瞬间才生效</strong>，给人"确认感"，且避免按下瞬间手抖的误触发。</li>
+<li><strong>中断里喂 Tick、主循环取结果</strong>：把"看门"的活放进 1kHz 中断（时基绝对准确，不受主循环 OLED 刷新十几 ms 的阻塞影响），取键值用"读后清零"队列语义。<code>Key_GetNum</code> 在主循环调用，与 <code>Key_Num</code>（中断写）是单字节原子访问，无需关中断保护。</li>
+</ol>
+<h2 id="62-ledc">6.2 LED.c：三行代码 + 灌电流常识</h2>
+<p>PC13 推挽输出，板载 LED 接 VCC→电阻→LED→PC13，所以<strong>低电平点亮</strong>（灌电流，STM32 GPIO 灌电流能力 20mA 强于拉电流）：</p>
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">LED_ON</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="n">GPIO_ResetBits</span><span class="p">(</span><span class="n">GPIOC</span><span class="p">,</span><span class="w"> </span><span class="n">GPIO_Pin_13</span><span class="p">);</span><span class="w"> </span><span class="p">}</span><span class="w">   </span><span class="c1">// 拉低=亮</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">LED_OFF</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">GPIO_SetBits</span><span class="p">(</span><span class="n">GPIOC</span><span class="p">,</span><span class="w"> </span><span class="n">GPIO_Pin_13</span><span class="p">);</span><span class="w"> </span><span class="p">}</span><span class="w">     </span><span class="c1">// 拉高=灭</span>
+</code></pre></div>
+
+<p><code>LED_Turn()</code> 用 <code>GPIO_ReadOutputDataBit</code> 读<strong>输出寄存器</strong>（不是输入），实现电平翻转。</p>
+<h2 id="63-oledc">6.3 OLED.c：一款完整显示驱动的解剖</h2>
+<p><a href="file:///e:/BaiduNetdiskDownload/平衡车入门教程资料-江协/程序源码/程序源码-无注释版/平衡车程序/06-平衡车程序优化/Hardware/OLED.c">OLED.c</a>（约 1480 行）驱动 SSD1306 控制器的 128×64 点阵屏，架构是经典的"<strong>显存 + 绘图 API + 批量刷屏</strong>"三层：</p>
+<div class="codehilite"><pre><span></span><code>应用层   OLED_Printf / ShowNum / DrawLine ...
+              │  只读写显存（内存操作，µs 级）
+显存层   OLED_DisplayBuf[8][128]  ← 128×64 屏的位图镜像，1KB
+              │  OLED_Update() 时才批量发硬件
+传输层   软件 I2C（PB8=SCL, PB9=SDA，从机地址 0x78）
+</code></pre></div>
+
+<h3 id="631">6.3.1 显存的"页"结构（理解一切显示函数的钥匙）</h3>
+<p>SSD1306 按"页"组织显存：<strong>1 页 = 8 行像素 = 1 字节/列</strong>。64 行 = 8 页。每个字节 bit0 在上、bit7 在下：</p>
+<div class="codehilite"><pre><span></span><code>        列0      列1     ...  列127
+页0   [B0B1..B7][...]          ← 字节高位在下！
+页1   [...]
+...
+页7   [...]
+</code></pre></div>
+
+<p>任意像素 (X, Y) 的操作都是两步定位：</p>
+<div class="codehilite"><pre><span></span><code><span class="n">OLED_DisplayBuf</span><span class="p">[</span><span class="n">Y</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">8</span><span class="p">][</span><span class="n">X</span><span class="p">]</span><span class="w"> </span><span class="o">|=</span><span class="w"> </span><span class="mh">0x01</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">Y</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">8</span><span class="p">);</span><span class="w">    </span><span class="c1">// 画点（DrawPoint 核心）</span>
+<span class="n">OLED_DisplayBuf</span><span class="p">[</span><span class="n">Y</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">8</span><span class="p">][</span><span class="n">X</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;=</span><span class="w"> </span><span class="o">~</span><span class="p">(</span><span class="mh">0x01</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">Y</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">8</span><span class="p">));</span><span class="w"> </span><span class="c1">// 擦点（ClearArea 核心）</span>
+</code></pre></div>
+
+<h3 id="632-ssd1306">6.3.2 通信层：控制字节是 SSD1306 的"暗号"</h3>
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">OLED_WriteCommand</span><span class="p">(</span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">Command</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">OLED_I2C_Start</span><span class="p">();</span>
+<span class="w">    </span><span class="n">OLED_I2C_SendByte</span><span class="p">(</span><span class="mh">0x78</span><span class="p">);</span><span class="w">      </span><span class="c1">// 从机地址（SA0=0 时的 8 位写地址）</span>
+<span class="w">    </span><span class="n">OLED_I2C_SendByte</span><span class="p">(</span><span class="mh">0x00</span><span class="p">);</span><span class="w">      </span><span class="c1">// 控制字节 0x00：后面是命令</span>
+<span class="w">    </span><span class="n">OLED_I2C_SendByte</span><span class="p">(</span><span class="n">Command</span><span class="p">);</span>
+<span class="w">    </span><span class="n">OLED_I2C_Stop</span><span class="p">();</span>
+<span class="p">}</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">OLED_WriteData</span><span class="p">(</span><span class="kt">uint8_t</span><span class="w"> </span><span class="o">*</span><span class="n">Data</span><span class="p">,</span><span class="w"> </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">Count</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="p">...</span>
+<span class="w">    </span><span class="n">OLED_I2C_SendByte</span><span class="p">(</span><span class="mh">0x40</span><span class="p">);</span><span class="w">      </span><span class="c1">// 控制字节 0x40：后面全是显存数据，可连续发 N 字节</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">Count</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="n">OLED_I2C_SendByte</span><span class="p">(</span><span class="n">Data</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="w">    </span><span class="p">...</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>同一根 I2C 上"命令"与"数据"靠第一字节的控制位区分（Co/D/C 位）。数据可以一口气连发——这正是 <code>OLED_Update</code> 效率的来源。</p>
+<h3 id="633-16">6.3.3 初始化：16 条命令点亮一块屏</h3>
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">OLED_Init</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">OLED_GPIO_Init</span><span class="p">();</span><span class="w">                 </span><span class="c1">// 开漏配置 + 1000×1000 空循环等电源稳</span>
+<span class="w">    </span><span class="n">OLED_WriteCommand</span><span class="p">(</span><span class="mh">0xAE</span><span class="p">);</span><span class="w">          </span><span class="c1">// 先关显示（防配置过程花屏）</span>
+<span class="w">    </span><span class="n">OLED_WriteCommand</span><span class="p">(</span><span class="mh">0xD5</span><span class="p">);</span><span class="w"> </span><span class="n">OLED_WriteCommand</span><span class="p">(</span><span class="mh">0x80</span><span class="p">);</span><span class="w">  </span><span class="c1">// 显示时钟分频</span>
+<span class="w">    </span><span class="n">OLED_WriteCommand</span><span class="p">(</span><span class="mh">0xA8</span><span class="p">);</span><span class="w"> </span><span class="n">OLED_WriteCommand</span><span class="p">(</span><span class="mh">0x3F</span><span class="p">);</span><span class="w">  </span><span class="c1">// 复用率 63 → 64 行</span>
+<span class="w">    </span><span class="n">OLED_WriteCommand</span><span class="p">(</span><span class="mh">0xD3</span><span class="p">);</span><span class="w"> </span><span class="n">OLED_WriteCommand</span><span class="p">(</span><span class="mh">0x00</span><span class="p">);</span><span class="w">  </span><span class="c1">// 显示偏移 0</span>
+<span class="w">    </span><span class="n">OLED_WriteCommand</span><span class="p">(</span><span class="mh">0x40</span><span class="p">);</span><span class="w">          </span><span class="c1">// 显示起始行 0</span>
+<span class="w">    </span><span class="n">OLED_WriteCommand</span><span class="p">(</span><span class="mh">0xA1</span><span class="p">);</span><span class="w">          </span><span class="c1">// 段重映射：列 127→SEG0（正常视角左右正确）</span>
+<span class="w">    </span><span class="n">OLED_WriteCommand</span><span class="p">(</span><span class="mh">0xC8</span><span class="p">);</span><span class="w">          </span><span class="c1">// COM 扫描方向：从下到上（上下正确）</span>
+<span class="w">    </span><span class="n">OLED_WriteCommand</span><span class="p">(</span><span class="mh">0xDA</span><span class="p">);</span><span class="w"> </span><span class="n">OLED_WriteCommand</span><span class="p">(</span><span class="mh">0x12</span><span class="p">);</span><span class="w">  </span><span class="c1">// COM 引脚配置（Alt 模式）</span>
+<span class="w">    </span><span class="n">OLED_WriteCommand</span><span class="p">(</span><span class="mh">0x81</span><span class="p">);</span><span class="w"> </span><span class="n">OLED_WriteCommand</span><span class="p">(</span><span class="mh">0xCF</span><span class="p">);</span><span class="w">  </span><span class="c1">// 对比度 0xCF</span>
+<span class="w">    </span><span class="n">OLED_WriteCommand</span><span class="p">(</span><span class="mh">0xD9</span><span class="p">);</span><span class="w"> </span><span class="n">OLED_WriteCommand</span><span class="p">(</span><span class="mh">0xF1</span><span class="p">);</span><span class="w">  </span><span class="c1">// 预充电周期</span>
+<span class="w">    </span><span class="n">OLED_WriteCommand</span><span class="p">(</span><span class="mh">0xDB</span><span class="p">);</span><span class="w"> </span><span class="n">OLED_WriteCommand</span><span class="p">(</span><span class="mh">0x30</span><span class="p">);</span><span class="w">  </span><span class="c1">// VCOMH 电平</span>
+<span class="w">    </span><span class="n">OLED_WriteCommand</span><span class="p">(</span><span class="mh">0xA4</span><span class="p">);</span><span class="w">          </span><span class="c1">// 显示跟随显存（非全亮）</span>
+<span class="w">    </span><span class="n">OLED_WriteCommand</span><span class="p">(</span><span class="mh">0xA6</span><span class="p">);</span><span class="w">          </span><span class="c1">// 正常显示（非反色）</span>
+<span class="w">    </span><span class="n">OLED_WriteCommand</span><span class="p">(</span><span class="mh">0x8D</span><span class="p">);</span><span class="w"> </span><span class="n">OLED_WriteCommand</span><span class="p">(</span><span class="mh">0x14</span><span class="p">);</span><span class="w">  </span><span class="c1">// ★ 开内部电荷泵！</span>
+<span class="w">    </span><span class="n">OLED_WriteCommand</span><span class="p">(</span><span class="mh">0xAF</span><span class="p">);</span><span class="w">          </span><span class="c1">// 开显示</span>
+<span class="w">    </span><span class="n">OLED_Clear</span><span class="p">();</span><span class="w"> </span><span class="n">OLED_Update</span><span class="p">();</span><span class="w">      </span><span class="c1">// 清一次屏，防上电随机数据花屏</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p><strong>0x8D/0x14 充电泵最关键</strong>：4 针 OLED 模块没有外部高压源，SSD1306 靠内部电荷泵把 3.3V 升到驱动 OLED 的 ~12V，不开启则屏完全不亮——这是"OLED 不显示"问题的头号原因。0xA1/0xC8 若配错，图像上下/左右镜像。</p>
+<p><strong>光标设置</strong>用三条命令拼一个 16 位地址：</p>
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">OLED_SetCursor</span><span class="p">(</span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">Page</span><span class="p">,</span><span class="w"> </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">X</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">OLED_WriteCommand</span><span class="p">(</span><span class="mh">0xB0</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Page</span><span class="p">);</span><span class="w">                  </span><span class="c1">// 页地址</span>
+<span class="w">    </span><span class="n">OLED_WriteCommand</span><span class="p">(</span><span class="mh">0x10</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="p">((</span><span class="n">X</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="mh">0xF0</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="mi">4</span><span class="p">));</span><span class="w">     </span><span class="c1">// 列地址高 4 位</span>
+<span class="w">    </span><span class="n">OLED_WriteCommand</span><span class="p">(</span><span class="mh">0x00</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="p">(</span><span class="n">X</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="mh">0x0F</span><span class="p">));</span><span class="w">            </span><span class="c1">// 列地址低 4 位</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>注释里保留的 <code>X += 2</code>：1.3 寸屏用 SH1106 控制器、显存 132 列且屏幕错位 2 列，驱动 1.3 寸屏必须解除注释——同一份代码兼容两种屏的开关。</p>
+<h3 id="634">6.3.4 刷屏与文本渲染</h3>
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">OLED_Update</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="w">      </span><span class="c1">// 全屏刷新：8 页 × 每页连发 128 字节</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">j</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">8</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">++</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">OLED_SetCursor</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+<span class="w">        </span><span class="n">OLED_WriteData</span><span class="p">(</span><span class="n">OLED_DisplayBuf</span><span class="p">[</span><span class="n">j</span><span class="p">],</span><span class="w"> </span><span class="mi">128</span><span class="p">);</span><span class="w">   </span><span class="c1">// 连续数据模式一次发一页</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>字符显示的本质是<strong>查字模库 + 搬运到位图</strong>：</p>
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">OLED_ShowChar</span><span class="p">(</span><span class="kt">int16_t</span><span class="w"> </span><span class="n">X</span><span class="p">,</span><span class="w"> </span><span class="kt">int16_t</span><span class="w"> </span><span class="n">Y</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">Char</span><span class="p">,</span><span class="w"> </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">FontSize</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">FontSize</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">OLED_8X16</span><span class="p">)</span>
+<span class="w">        </span><span class="n">OLED_ShowImage</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="w"> </span><span class="n">Y</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w"> </span><span class="mi">16</span><span class="p">,</span><span class="w"> </span><span class="n">OLED_F8x16</span><span class="p">[</span><span class="n">Char</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="sc">' '</span><span class="p">]);</span><span class="w">   </span><span class="c1">// ASCII 减空格 = 库下标</span>
+<span class="w">    </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">FontSize</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">OLED_6X8</span><span class="p">)</span>
+<span class="w">        </span><span class="n">OLED_ShowImage</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="w"> </span><span class="n">Y</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w"> </span><span class="n">OLED_F6x8</span><span class="p">[</span><span class="n">Char</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="sc">' '</span><span class="p">]);</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p><code>Char - ' '</code>：字模库从空格（ASCII 32）开始连续存到 <code>~</code>（126），任意字符下标 = ASCII − 32。</p>
+<p><strong>OLED_ShowString 的多字节字符解析</strong>（支持中文）值得一提：UTF-8 模式下按首字节高位模式判字长——</p>
+<div class="codehilite"><pre><span></span><code><span class="k">if</span><span class="w">      </span><span class="p">((</span><span class="n">String</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="mh">0x80</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0x00</span><span class="p">)</span><span class="w"> </span><span class="n">CharLength</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">   </span><span class="c1">// 0xxxxxxx   ASCII</span>
+<span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">((</span><span class="n">String</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="mh">0xE0</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0xC0</span><span class="p">)</span><span class="w"> </span><span class="n">CharLength</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span><span class="w">   </span><span class="c1">// 110xxxxx   2 字节</span>
+<span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">((</span><span class="n">String</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="mh">0xF0</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0xE0</span><span class="p">)</span><span class="w"> </span><span class="n">CharLength</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span><span class="p">;</span><span class="w">   </span><span class="c1">// 1110xxxx   3 字节（中文在此）</span>
+<span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">((</span><span class="n">String</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="mh">0xF8</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0xF0</span><span class="p">)</span><span class="w"> </span><span class="n">CharLength</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span><span class="w">   </span><span class="c1">// 11110xxx   4 字节</span>
+</code></pre></div>
+
+<p>提取出完整字符后到 <code>OLED_CF16x16</code> 自定义中文字库线性查找（<code>strcmp</code> 匹配 Index 字符串），找到则 16×16 显示，找不到显示"方框问号"。<strong>源码编码必须与 OLED.h 中定义的 <code>OLED_CHARSET_UTF8</code> / <code>OLED_CHARSET_GB2312</code> 一致</strong>，否则中文全是乱码——Keil 默认 GB2312，VSCode 默认 UTF-8。</p>
+<p>数字显示用"幂取位法"（与 Serial_SendNumber 同款）：</p>
+<div class="codehilite"><pre><span></span><code><span class="n">OLED_ShowChar</span><span class="p">(</span><span class="n">X</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">FontSize</span><span class="p">,</span><span class="w"> </span><span class="n">Y</span><span class="p">,</span><span class="w"> </span><span class="n">Number</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">OLED_Pow</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="n">Length</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="sc">'0'</span><span class="p">,</span><span class="w"> </span><span class="n">FontSize</span><span class="p">);</span>
+<span class="c1">//                  除以 10^(第i位的权重) %10 = 提取第 i 位数字，+'0' 转成字符</span>
+</code></pre></div>
+
+<p><code>OLED_ShowFloatNum</code> 多一步<strong>四舍五入进位</strong>：<code>FraNum = round(小数×10^FraLength)</code>，若舍入后 <code>FraNum/PowNum</code> 进位（0.999→1.00），要把 1 加回整数部分——细节决定显示是否"跳变"。</p>
+<p><code>OLED_Printf</code> 用 <code>va_list/vsprintf</code> 在 256 字节栈缓冲里完成格式化再交给 ShowString——注意<strong>格式串超长会栈溢出</strong>，%05.2f 这类要节制。</p>
+<h3 id="635-oled_showimage">6.3.5 图像搬运：OLED_ShowImage 的跨页位移</h3>
+<p>字模数据按"从第 0 页开始"的布局存储，但显示位置 Y 不一定是 8 的倍数——需要把一个字节<strong>拆到两页</strong>：</p>
+<div class="codehilite"><pre><span></span><code><span class="n">OLED_DisplayBuf</span><span class="p">[</span><span class="n">Page</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">j</span><span class="p">][</span><span class="n">X</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">]</span><span class="w">     </span><span class="o">|=</span><span class="w"> </span><span class="n">Image</span><span class="p">[</span><span class="n">j</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">Width</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">Shift</span><span class="p">);</span><span class="w">      </span><span class="c1">// 高位留在本页</span>
+<span class="n">OLED_DisplayBuf</span><span class="p">[</span><span class="n">Page</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">][</span><span class="n">X</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">|=</span><span class="w"> </span><span class="n">Image</span><span class="p">[</span><span class="n">j</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">Width</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="p">(</span><span class="mi">8</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Shift</span><span class="p">);</span><span class="w">  </span><span class="c1">// 低位溢到下页</span>
+</code></pre></div>
+
+<p><code>Shift = Y % 8</code>。这就是所有"非 8 对齐坐标"都能显示的原因。函数开头 <code>OLED_ClearArea</code> 先擦除目标区域，保证透明背景（不残留旧像素）。</p>
+<h3 id="636-bresenham">6.3.6 绘图算法：Bresenham 一家子</h3>
+<ul>
+<li><strong>DrawLine</strong>：Bresenham 直线算法——全程整数加减，用决策变量 d 判定"下一个点走 E 还是 NE"，避免浮点和乘除。实现先把任意象限的线段<strong>归一化</strong>到"第一象限、斜率 0~1"：x 反向→交换两端点（yflag 不需要）；y 反向→坐标取负+<code>yflag</code>；斜率&gt;1→xy 互换+<code>xyflag</code>；画点时按标志位把坐标<strong>变换回去</strong>。这套"归一化→算法→反变换"的套路值得背下来。</li>
+<li><strong>DrawCircle</strong>：Bresenham 画圆 + <strong>八分对称性</strong>——算出 1/8 圆弧的点 (x,y)，其余 7 个对称点 <code>(±x,±y)/(±y,±x)</code> 免费获得，效率 ×8。决策变量 <code>d = 1-R</code> 起步，<code>d&lt;0</code> 加 <code>2x+1</code>（走东点），否则加 <code>2(x−y)+1</code>（走东南点）。</li>
+<li><strong>DrawEllipse</strong>：椭圆曲率不均，分"靠长短轴端点的两段"用两个决策变量 d1/d2 各自递推。</li>
+<li><strong>DrawTriangle（填充）</strong>：包围盒内逐点调用 <code>OLED_pnpoly</code>（W. Randolph Franklin 射线法）判点在多边形内——<strong>射线法</strong>：从测试点向右发射线，穿越多边形边奇数次即在内部。代码里 <code>c = !c</code> 就是"穿越计数取反"。</li>
+<li><strong>DrawArc</strong>：复用画圆的八分点生成，每个候选点用 <code>OLED_IsInAngle</code>（atan2 求点角度 + 环形区间判断）过滤。</li>
+</ul>
+<h3 id="637-oled_datac">6.3.7 OLED_Data.c：字模库</h3>
+<p>存三个数组：<code>OLED_F8x16[95][16]</code>、<code>OLED_F6x8[95][6]</code>（ASCII 95 个可见字符）、<code>OLED_CF16x16[]</code>（中文自定义库，每项 = 字符串 Index + 32 字节点阵）。字模由取模软件生成，<strong>纵向取模、字节倒序</strong>（与 6.3.1 的页结构对应）。想加新汉字：取模软件生成 16×16 数据，按格式追加一项即可。</p>
+<hr>
+<p><strong>本章思考</strong>：
+1. 为什么 OLED_ShowString 显示 GB2312 中文只需判断最高位，UTF-8 却要判三位？
+2. OLED_Update 全屏要 ~10ms，若把它也放进 1kHz 中断里调用会发生什么？</p>
+<hr>
+<h1 id="7-serial-blueserial">第 7 章 串行通信：Serial / BlueSerial</h1>
+<p>工程里有两路几乎同构的串口驱动，职责不同：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Serial（USART1, PA9/PA10）</th>
+<th>BlueSerial（USART2, PA2/PA3）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>用途</td>
+<td>调试打印（printf 重定向）</td>
+<td>蓝牙模块收发调参/遥控指令</td>
+</tr>
+<tr>
+<td>接收方式</td>
+<td>单字节 + RxFlag</td>
+<td><strong>状态机整包提取 <code>[...]</code></strong></td>
+</tr>
+<tr>
+<td>关键全局量</td>
+<td>Serial_RxData / Serial_RxFlag</td>
+<td>BlueSerial_RxPacket[100] / BlueSerial_RxFlag</td>
+</tr>
+</tbody>
+</table>
+<h2 id="71">7.1 初始化配置逐项解读</h2>
+<div class="codehilite"><pre><span></span><code><span class="n">USART_InitStructure</span><span class="p">.</span><span class="n">USART_BaudRate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">9600</span><span class="p">;</span><span class="w">                            </span><span class="c1">// 波特率</span>
+<span class="n">USART_InitStructure</span><span class="p">.</span><span class="n">USART_HardwareFlowControl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">USART_HardwareFlowControl_None</span><span class="p">;</span><span class="w">  </span><span class="c1">// 无流控</span>
+<span class="n">USART_InitStructure</span><span class="p">.</span><span class="n">USART_Mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">USART_Mode_Tx</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">USART_Mode_Rx</span><span class="p">;</span><span class="w">       </span><span class="c1">// 收发都开</span>
+<span class="n">USART_InitStructure</span><span class="p">.</span><span class="n">USART_Parity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">USART_Parity_No</span><span class="p">;</span><span class="w">                   </span><span class="c1">// 无校验</span>
+<span class="n">USART_InitStructure</span><span class="p">.</span><span class="n">USART_StopBits</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">USART_StopBits_1</span><span class="p">;</span><span class="w">                </span><span class="c1">// 1 位停止位</span>
+<span class="n">USART_InitStructure</span><span class="p">.</span><span class="n">USART_WordLength</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">USART_WordLength_8b</span><span class="p">;</span><span class="w">           </span><span class="c1">// 8 位数据</span>
+</code></pre></div>
+
+<p>即标准 <strong>9600-8-N-1</strong>，必须与对端（USB 转串口工具 / 蓝牙模块默认配置）完全一致。引脚方向是 USART 的固定套路：<strong>TX 配复用推挤（AF_PP）</strong>——数据由外设推出去；<strong>RX 配上拉输入（IPU）</strong>——空闲电平为高，符合 UART 空闲态。</p>
+<p>中断配置与 Timer 同款（NVIC 组 2，USART1/USART2 都在抢占 1，可打断 TIM1 控制中断，理由见 5.1）。</p>
+<h2 id="72-sendbyte-printf">7.2 发送：从 SendByte 到 printf</h2>
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">Serial_SendByte</span><span class="p">(</span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">Byte</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">USART_SendData</span><span class="p">(</span><span class="n">USART1</span><span class="p">,</span><span class="w"> </span><span class="n">Byte</span><span class="p">);</span><span class="w">      </span><span class="c1">// 写 TDR，硬件自动移位发出</span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">USART_GetFlagStatus</span><span class="p">(</span><span class="n">USART1</span><span class="p">,</span><span class="w"> </span><span class="n">USART_FLAG_TXE</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">RESET</span><span class="p">);</span><span class="w">   </span><span class="c1">// 等 TXE=1</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p><strong>TXE 语义</strong>：发送数据寄存器空（数据已搬入移位寄存器）。写 DR 后等 TXE，保证下一个字节到来时上一个已让位——这是"发送后等待"的写法；"发送前等待"（先等 TXE 再写）亦可。注意这里没有等 TC（发送完成），函数返回时最后一位可能还在移位中，连续 SendByte 无影响，但<strong>发完立刻进低功耗/复位会截断数据</strong>。</p>
+<p><strong>printf 重定向</strong>只需一个函数（Keil MicroLIB）：</p>
+<div class="codehilite"><pre><span></span><code><span class="kt">int</span><span class="w"> </span><span class="nf">fputc</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">ch</span><span class="p">,</span><span class="w"> </span><span class="kt">FILE</span><span class="w"> </span><span class="o">*</span><span class="n">f</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">Serial_SendByte</span><span class="p">(</span><span class="n">ch</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">ch</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>此后 <code>printf("Angle=%f\r\n", Angle);</code> 直接走串口。自己实现的 <code>Serial_Printf</code> 则用 <code>va_list + vsprintf</code> 先格式化到 100 字节缓冲再整串发出（不依赖重定向，逻辑更可控）。</p>
+<p><code>Serial_SendNumber</code> 用幂取位法把 uint32 逐位转 ASCII（<code>%10 + '0'</code>），同 OLED_ShowNum 思路，不再展开。</p>
+<h2 id="73-blueserial">7.3 BlueSerial 的包接收状态机（重点）</h2>
+<p>串口是<strong>字节流</strong>，没有"消息边界"。App 发的指令 <code>[slider,AngleKp,5.5]</code> 到达 MCU 时只是一个字节一个字节的中断。如何拼回"一包"？本工程用两状态状态机，以 <code>[</code> 开包、<code>]</code> 闭包：</p>
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">USART2_IRQHandler</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">RxState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">      </span><span class="c1">// 0=等包头  1=收包体</span>
+<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">pRxPacket</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">    </span><span class="c1">// 包内写指针</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">USART_GetITStatus</span><span class="p">(</span><span class="n">USART2</span><span class="p">,</span><span class="w"> </span><span class="n">USART_IT_RXNE</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">SET</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">RxData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">USART_ReceiveData</span><span class="p">(</span><span class="n">USART2</span><span class="p">);</span><span class="w">   </span><span class="c1">// 读 DR 同时清 RXNE 标志</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">RxState</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w">                     </span><span class="c1">// 状态0：等包头</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">RxData</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'['</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">BlueSerial_RxFlag</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w">   </span><span class="c1">// ★ Flag=1 期间拒绝新包</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="n">RxState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">                </span><span class="n">pRxPacket</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">                </span><span class="c1">// 复位写指针</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">RxState</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w">                </span><span class="c1">// 状态1：收包体</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">RxData</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">']'</span><span class="p">)</span><span class="w">                </span><span class="c1">// 闭包</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="n">RxState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">                </span><span class="n">BlueSerial_RxPacket</span><span class="p">[</span><span class="n">pRxPacket</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sc">'\0'</span><span class="p">;</span><span class="w">   </span><span class="c1">// 补字符串结束符</span>
+<span class="w">                </span><span class="n">BlueSerial_RxFlag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">                   </span><span class="c1">// 通知主循环</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="k">else</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="n">BlueSerial_RxPacket</span><span class="p">[</span><span class="n">pRxPacket</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">RxData</span><span class="p">;</span><span class="w"> </span><span class="c1">// 逐字节入缓冲</span>
+<span class="w">                </span><span class="n">pRxPacket</span><span class="w"> </span><span class="o">++</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="n">USART_ClearITPendingBit</span><span class="p">(</span><span class="n">USART2</span><span class="p">,</span><span class="w"> </span><span class="n">USART_IT_RXNE</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>逐个设计点：</p>
+<ol>
+<li><strong><code>BlueSerial_RxFlag == 0</code> 才允许开新包</strong>：主循环还在解析上一包时，新指令整包丢弃。牺牲实时性换<strong>数据一致性</strong>——比"解析到一半缓冲被覆盖"安全得多。</li>
+<li><strong>静默丢弃包外字符</strong>：状态 0 下非 <code>[</code> 的字节（干扰、残包尾巴）直接忽略，天然抗噪。</li>
+<li><strong>隐患：无长度保护</strong>：若发来 <code>[</code> 后没有 <code>]</code> 且长度 &gt;100，<code>pRxPacket</code> 越界写坏相邻内存。可信环境下可接受，工程化应加 <code>if (pRxPacket &gt;= 99) {RxState=0;}</code> 防御。改进时也可以加<strong>包间超时</strong>：收到 <code>[</code> 后 100ms 无 <code>]</code> 则复位状态机，防止半包卡死接收。</li>
+</ol>
+<h2 id="74">7.4 主循环侧的协议落地</h2>
+<p>第 1 章已详解 <code>strtok</code> 三段式解析，这里补一张协议总表：</p>
+<table>
+<thead>
+<tr>
+<th>包格式</th>
+<th>字段</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>[slider,Name,Value]</code></td>
+<td>Name ∈ {AngleKp, AngleKi, AngleKd, SpeedKp..., TurnKd, Offset}</td>
+<td>atof 写入对应 PID 参数 / OutOffset</td>
+</tr>
+<tr>
+<td><code>[joystick,LH,LV,RH,RV]</code></td>
+<td>四个 int8 摇杆值</td>
+<td>SpeedPID.Target = LV/25；TurnPID.Target = RH/25</td>
+</tr>
+<tr>
+<td><code>[key,Name,Action]</code></td>
+<td>预留</td>
+<td>函数体为空，待扩展</td>
+</tr>
+</tbody>
+</table>
+<p><code>BlueSerial_Printf("[plot,%f,%f,%f]", ...)</code> 被注释的那行：原本把三个积分器值发回上位机画曲线——<strong>PID 调参的"示波器"</strong>。建议调参阶段打开它，配合 VOFA+ 等上位机看 ErrorInt 的收敛情况。</p>
+<hr>
+<h1 id="8">第 8 章 工程组织与其它文件</h1>
+<h2 id="81-stm32f10x_itc">8.1 stm32f10x_it.c：空的中断模板</h2>
+<p>此文件只包含系统异常（NMI/HardFault 等）的空模板。<strong>本工程的中断服务函数写在了各自相关文件里</strong>（TIM1_UP_IRQHandler 在 main.c、USART1_IRQHandler 在 Serial.c、USART2_IRQHandler 在 BlueSerial.c）——C 语言的链接器只关心全局符号名，不关心函数写在哪个 .c 文件，只要与启动文件向量表里的弱符号名一致即可覆盖。这种"ISR 跟着模块走"的组织方式让每个驱动自包含。</p>
+<h2 id="82">8.2 头文件的组织规则</h2>
+<p>每个驱动头文件的标准三件套：</p>
+<div class="codehilite"><pre><span></span><code><span class="cp">#ifndef __PID_H      </span><span class="c1">// ① include guard：防重复包含（编译期只展开一次）</span>
+<span class="cp">#define __PID_H</span>
+
+<span class="k">typedef</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="p">{...}</span><span class="w"> </span><span class="n">PID_t</span><span class="p">;</span><span class="w">   </span><span class="c1">// ② 对外暴露的类型</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">PID_Init</span><span class="p">(</span><span class="n">PID_t</span><span class="w"> </span><span class="o">*</span><span class="n">p</span><span class="p">);</span><span class="w">      </span><span class="c1">// ③ 对外暴露的函数原型</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">PID_Update</span><span class="p">(</span><span class="n">PID_t</span><span class="w"> </span><span class="o">*</span><span class="n">p</span><span class="p">);</span>
+
+<span class="cp">#endif</span>
+</code></pre></div>
+
+<ul>
+<li><strong>.h 只放声明，.c 放实现</strong>；<code>static</code> 函数/变量（如 OLED 工具函数、Key_Tick 里的 static 局部量）只在 .c 内可见——这就是 C 的"私有"。</li>
+<li>各 .h 之间用 <code>#include</code> 显式声明依赖（如 OLED.h include OLED_Data.h），不依赖"恰好被别的头带进来"。</li>
+</ul>
+<h2 id="83-stm32f10x_confh">8.3 stm32f10x_conf.h：标准库的总闸</h2>
+<div class="codehilite"><pre><span></span><code><span class="c1">//#include "stm32f10x_adc.h"     // 用不到的外设库可以注释掉，减编译体积</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">"stm32f10x_gpio.h"</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">"stm32f10x_tim.h"</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">"stm32f10x_usart.h"</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">"misc.h"</span><span class="w">                </span><span class="c1">// NVIC</span>
+<span class="p">...</span>
+</code></pre></div>
+
+<p>同时控制 <code>assert_param</code> 宏：未定义 <code>USE_FULL_ASSERT</code> 时断言为空——发布版零开销。</p>
+<hr>
+<h1 id="9-faq">第 9 章 调参方法与常见问题 FAQ</h1>
+<h2 id="91">9.1 调参顺序（血泪总结）</h2>
+<p><strong>第 0 步：静态验证（车架空，RunFlag=0）</strong>
+- 屏上 GY 读数：静止时应约 ±5 以内，否则改 <code>GY -= 16</code> 零偏；
+- 手倾车身：Angle 应平滑跟随、方向正确（前倾为正还是负要与代码约定一致）；
+- 手转轮子：AveSpeed/DifSpeed 变化正确，同转应只动 AveSpeed。</p>
+<p><strong>第 1 步：只调直立环（Ki=Ki=0.1 先置 0，速度环/转向环不启用）</strong>
+1. 增大 Kp 到车微微低频晃动 → 回退到 60%；
+2. 增大 Kd 阻尼高频抖动，到车"稳如被手扶"；
+3. 最后加小 Ki 消除缓慢漂移（Ki 过大又会低频摇摆）。</p>
+<p><strong>第 2 步：合上速度环</strong>
+- Kp 从小加起：响应是"推车它顶回来"；过大表现为前后大幅慢摆；
+- Ki 消除缓慢匀速漂移（受地面坡度/死区影响）。</p>
+<p><strong>第 3 步：转向环</strong>：Kp 决定转向跟随快慢，Ki 决定能否走直线。</p>
+<p><strong>每一步都用蓝牙 slider 在线改参数 + OLED 三列仪表观察</strong>，这就是这套程序调试架构的价值。</p>
+<h2 id="92">9.2 症状速查表</h2>
+<table>
+<thead>
+<tr>
+<th>症状</th>
+<th>可能原因</th>
+<th>处置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>一启动就朝一个方向冲刺到倒</td>
+<td>电机/传感器/编码器任一符号反了</td>
+<td>核对 <code>AvePWM=-Out</code>、<code>PWM=-PWM</code>、GY 方向</td>
+</tr>
+<tr>
+<td>静止时 Angle 缓慢单向漂</td>
+<td>陀螺零偏变了</td>
+<td>重标 <code>GY-=16</code>（或上电自动校准）</td>
+</tr>
+<tr>
+<td>静止时 Angle 有固定小偏差</td>
+<td>机械安装不水平</td>
+<td>调 <code>AngleAcc += 0.5</code> 机械零点</td>
+</tr>
+<tr>
+<td>高频嘶嘶抖</td>
+<td>直立环 Kp 过大 / Kd 不足</td>
+<td>降 Kp 或升 Kd</td>
+</tr>
+<tr>
+<td>低频大幅摇摆</td>
+<td>速度环 Kp 过大或直立环 Ki 过大</td>
+<td>减小相应参数</td>
+</tr>
+<tr>
+<td>起步猛窜一下</td>
+<td>没清积分器 / Target 残留</td>
+<td>确认启动前 <code>PID_Init</code> 三个环</td>
+</tr>
+<tr>
+<td>小信号不动、加一点又太猛</td>
+<td>电机死区</td>
+<td>调 <code>OutOffset</code>（先小后大）</td>
+</tr>
+<tr>
+<td>OLED 不亮/花屏</td>
+<td>充电泵未开 / I2C 上拉缺失 / 供电不足</td>
+<td>核对 0x8D 0x14、4.7k 上拉、独立 3.3V</td>
+</tr>
+<tr>
+<td>蓝牙收不到</td>
+<td>波特率不符 / TX-RX 未交叉 / 括号包格式错</td>
+<td>9600、TX↔RX 对调、<code>[...]</code> 格式</td>
+</tr>
+<tr>
+<td>遥控半程就反向</td>
+<td>App 发 0~255 而 int8_t 解析</td>
+<td>上位机改发 -128~127</td>
+</tr>
+<tr>
+<td>中断偶发超时</td>
+<td>OLED/调试打印混入中断</td>
+<td><code>TimerErrorFlag</code> 定位，重活移回主循环</td>
+</tr>
+</tbody>
+</table>
+<h2 id="93-1ms">9.3 实时性账本（中断预算 1ms）</h2>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>耗时量级</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MPU6050 突发读 14 字节（软 I2C）</td>
+<td>~200-400µs（大头）</td>
+</tr>
+<tr>
+<td>PID×3 + 角度解算（含 atan2）</td>
+<td>~几十 µs</td>
+</tr>
+<tr>
+<td>Encoder_Get ×2</td>
+<td>&lt;2µs</td>
+</tr>
+<tr>
+<td>全部 1ms 分支（Key_Tick 等）</td>
+<td>&lt;5µs</td>
+</tr>
+</tbody>
+</table>
+<p>10ms 分支合计约 0.3~0.5ms，预算内但<strong>不宽裕</strong>——若把 OLED_Update（~10ms）放进去必然超时，这就是它待在主循环的原因。想缩短：给 MPU6050 换硬件 I2C 或提高软 I2C 速率。</p>
+<hr>
+<h1 id="10">第 10 章 思考题与进阶方向</h1>
+<h2 id="101">10.1 各章思考题汇总</h2>
+<ol>
+<li>（第1章）<code>Timer_Init</code> 提前会怎样？——中断读未初始化外设，I2C 卡死/垃圾数据。</li>
+<li>（第1章）机械零点 0.5 如何重测？——静止放平，读 Angle 显示值，把它的相反数加进 <code>AngleAcc +=</code>。</li>
+<li>（第2章）为什么直立环必须 D 项而速度环可以不要？——内环对象快且欠阻尼需微分镇定；外环 50ms+机械惯性本身即滤波。</li>
+<li>（第3章）重复起始的必要性？——读写切换期间必须保持总线控制权与寄存器指针。</li>
+<li>（第4章）编码器 ARR 为什么是 65535 而不是更小？——用满 16 位 + int16 补码天然处理回绕符号。</li>
+<li>（第5章）串口抢占级为何高于 TIM1？——串口 ISR 极短、字节到达不可延迟；控制环可容忍 µs 级抖动。</li>
+<li>（第6章）释放沿 vs 按下沿触发的体验差异？——释放沿有"确认感"，长按不重复。</li>
+<li>（第7章）状态机丢包保护的代价？——解析期新指令被丢；改进：双缓冲或 DMA 环形队列。</li>
+</ol>
+<h2 id="102">10.2 进阶改造路线</h2>
+<ol>
+<li><strong>上电自动陀螺零偏校准</strong>：上电静置采 1s 平均 GY 替代硬编码 16；</li>
+<li><strong>卡尔曼滤波</strong>替代互补滤波（把 α 换成随角速度自适应的增益）；</li>
+<li><strong>速度环前馈 + 低通</strong>：编码器速度先过一阶低通再进 PID，抑制量化噪声；</li>
+<li><strong>DMP 硬件解算</strong>：MPU6050 内置 DMP 直接输出四元数，省掉 MCU 上的滤波计算；</li>
+<li><strong>串口 DMA + 空闲中断</strong>收包，替代逐字节中断，接收零 CPU 占用；</li>
+<li><strong>看门狗</strong>：IWDG 由控制中断喂狗，程序跑飞自动复位站立保护；</li>
+<li><strong>参数掉电保存</strong>：调好的 PID 存入 Flash/BKP 备份域，免每次手机重调。</li>
+</ol>
+<hr>
+<h1 id="a">附录 A 引脚分配总表</h1>
+<p>见 0.2 节表格（此处不重复）。补充电源要点：电机驱动必须<strong>独立供电或大电容缓冲</strong>，电机堵转电流会把 3.3V 拉垮导致 MCU 复位——表现为"一动就重启"。</p>
+<h1 id="b">附录 B 全局符号速查表</h1>
+<table>
+<thead>
+<tr>
+<th>符号</th>
+<th>类型</th>
+<th>定义处</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Angle / AngleAcc / AngleGyro</td>
+<td>float</td>
+<td>main.c</td>
+<td>融合角 / 加计角 / 陀螺角</td>
+</tr>
+<tr>
+<td>AX..GZ</td>
+<td>int16_t</td>
+<td>main.c</td>
+<td>MPU6050 六轴原始值</td>
+</tr>
+<tr>
+<td>RunFlag / KeyNum</td>
+<td>uint8_t</td>
+<td>main.c</td>
+<td>运行开关 / 键值</td>
+</tr>
+<tr>
+<td>LeftPWM / RightPWM / AvePWM / DifPWM</td>
+<td>int16_t</td>
+<td>main.c</td>
+<td>电机 PWM 及其分解</td>
+</tr>
+<tr>
+<td>LeftSpeed / RightSpeed / AveSpeed / DifSpeed</td>
+<td>float</td>
+<td>main.c</td>
+<td>轮速及分解</td>
+</tr>
+<tr>
+<td>AnglePID / SpeedPID / TurnPID</td>
+<td>PID_t</td>
+<td>main.c</td>
+<td>三个控制器</td>
+</tr>
+<tr>
+<td>TimerErrorFlag / TimerCount</td>
+<td>—</td>
+<td>main.c</td>
+<td>中断超时调试</td>
+</tr>
+<tr>
+<td>OLED_DisplayBuf[8][128]</td>
+<td>uint8_t</td>
+<td>OLED.c</td>
+<td>OLED 显存</td>
+</tr>
+<tr>
+<td>Key_Num</td>
+<td>uint8_t</td>
+<td>Key.c</td>
+<td>按键事件暂存</td>
+</tr>
+<tr>
+<td>BlueSerial_RxPacket / RxFlag</td>
+<td>—</td>
+<td>BlueSerial.c</td>
+<td>蓝牙包缓冲与就绪标志</td>
+</tr>
+<tr>
+<td>Serial_RxData / RxFlag</td>
+<td>—</td>
+<td>Serial.c</td>
+<td>调试串口单字节接收</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<blockquote>
+<p>全文完。建议配合源码对照阅读：先精读第 1 章 main.c 建立全景，再按"PID → 姿态 → 执行 → 节拍 → 交互 → 通信"的顺序逐个模块深入，最后回到第 9 章动手调参验证理解。</p>
+</blockquote>
+<footer style="margin-top:64px;padding-top:20px;border-top:1px solid var(--rule);color:var(--muted);font-size:13px">
+STM32 平衡车程序代码详解教程（超详细版）· 配套源码：06-平衡车程序优化 · 仅供学习交流
+</footer>
+</div>
+</body>
+</html>
