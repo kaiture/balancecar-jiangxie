@@ -2,12 +2,79 @@
 
 > 基于《江协科技 平衡车入门教程》"06-平衡车程序优化"工程源码
 > 主控：STM32F103C8T6（72MHz Cortex-M3）· 标准外设库 · 串级 PID 控制
-> 本文逐文件、逐函数、逐行讲解全部自编代码，包含原理推导、寄存器细节、时序图、调参方法与常见问题。
+> 本仓库包含标准库固件、Keil 工程及配套教程。首次接线、编译和烧录可从下方快速开始。
+
+---
+
+## 快速开始
+
+这是 STM32F103C8T6 标准外设库工程。控制周期为 10 ms（姿态和直立环）与 50 ms（测速、速度环和转向环）。板上的 K1（PB1）控制平衡闭环启停，HC-05 经 USART2 接收遥控指令。
+
+### 物料与接线
+
+| 物料 | 数量 | 选型说明 |
+|---|---:|---|
+| STM32F103C8T6 最小系统板 | 1 | 工程使用 8 MHz HSE、72 MHz 系统时钟 |
+| MPU6050 模块、128×64 SSD1306 I²C OLED | 各 1 | 3.3 V 供电和逻辑，两套软件 I²C 总线 |
+| TB6612FNG 双路电机驱动 | 1 | 3.3 V 逻辑，电机电源接 VM |
+| 带 A/B 相编码器的直流减速电机、车轮 | 各 2 | 编码器输出应兼容 3.3 V。换电机时重新核对计数和减速比 |
+| 车架、常开按键、电池、开关、稳压电源 | 各 1 | K1 用于启停。电源按电机额定电压、堵转电流和驱动板额定能力选型 |
+| ST-LINK 探针 | 1 | 通过 SWD 烧录 |
+| HC-05 经典蓝牙 SPP 模块、3.3 V USB-UART | 可选 | 分别用于遥控与 USART1 调试。模块供电按实际板型标注接线 |
+
+| 接口 | STM32 / 电源 | 模块端 |
+|---|---|---|
+| MPU6050 | PB10 / PB11 | SCL / SDA，7 位地址应为 0x68（AD0 低） |
+| OLED | PB8 / PB9 | SCL / SDA，7 位地址 0x3C |
+| TB6612FNG A 路 | PA0 / PB12 / PB13 | PWMA / AIN1 / AIN2，AO1/AO2 接左电机 |
+| TB6612FNG B 路 | PA1 / PB14 / PB15 | PWMB / BIN1 / BIN2，BO1/BO2 接右电机 |
+| TB6612FNG 电源 | 3.3 V / 电机电源 / GND | VCC 和 STBY / VM / GND |
+| 左编码器 | PA6 / PA7 | EA / EB |
+| 右编码器 | PB6 / PB7 | EA / EB |
+| HC-05 | PA2（TX）/ PA3（RX）/ GND | RXD / TXD / GND，透传串口 9600 8N1 |
+| USB-UART | PA9（TX）/ PA10（RX）/ GND | RXD / TXD / GND，9600 8N1 |
+| 按键 | PB1 / PB0 / PA5 / PA4 | K1 / K2 / K3 / K4，按下接地。当前主程序使用 K1 |
+| ST-LINK | PA13 / PA14 / GND | SWDIO / SWCLK / GND，有 VTref 的探针接目标板 3.3 V 参考 |
+
+```mermaid
+flowchart LR
+    VIN["电池 VIN（经开关）"] --> VM["TB6612FNG VM"]
+    VIN --> REG["3.3 V 稳压链路"]
+    REG --> MCU["STM32、MPU6050、OLED、编码器"]
+    REG --> Logic["TB6612FNG VCC、STBY"]
+    MCU -->|"PWM 和方向信号"| Logic
+    VM --> M["驱动 A/B 路输出 → 两个电机"]
+    Logic --> M
+```
+
+各模块共地，两套 I²C 的 SCL/SDA 分别上拉到 3.3 V。模块已有上拉时，先核对等效阻值。电机电流走 VM 支路，避免经过核心板的 3.3 V 稳压器。江协控制板 V1.0 用单级 LDO，V2.0 用 5 V DC/DC 加 3.3 V LDO。板卡原理图在官方资料包的「原理图等文档」目录，按实物版本选 `平衡车控制板-V1.0.pdf` 或 `平衡车控制板-V2.0.pdf`。 [江协资料下载](https://jiangxiekeji.com/download.html) · [TB6612FNG 数据手册](https://toshiba.semicon-storage.com/info/datasheet_en_20141001.pdf?did=10660)
+
+### Keil 编译与 SWD 烧录
+
+1. 准备 Windows、Keil MDK（µVision）、Arm Compiler 5.06 update 7（build 960）和 Keil STM32F1xx_DFP 2.4.0。用 Pack Installer 安装设备包，打开 [Project.uvprojx](Project.uvprojx)，确认目标为 `Target 1`、器件为 `STM32F103C8`，编译器选择 Arm Compiler 5。 [Keil 编译器选项](https://www.keil.com/support/man/docs/uv4/uv4_dg_adstarg.asp)
+2. 在 **Options for Target → Output** 勾选 **Create HEX File**，然后 **Project → Rebuild all target files**。重建后使用本次生成的 `Objects/Project.hex`。已在 Windows 用上述工具链从干净检出验证，结果为 0 错误、7 个文件末尾缺换行的警告。 [Keil HEX 导出说明](https://www.keil.com/support/man/docs/uv4cl/uv4cl_ca_createhexfile.htm)
+3. 烧录时关闭电机电源。江协共用 VIN 的控制板可先拔下电机插头。目标板按板卡规定单路供电，接好 SWD。打开 STM32CubeProgrammer，选择 **ST-LINK** 和 **SWD** 后连接。在 **Erasing & Programming** 选择 `Objects/Project.hex`，勾选校验再开始烧录。HEX 内已带有 Flash 地址，起始地址为 `0x08000000`。 [ST 烧录工具说明](https://www.st.com/en/development-tools/stm32cubeprog.html)
+4. 校验通过后复位，确认 BOOT0 为低电平。初次烧录和架空联调分开进行，板上现象以实测为准。
+
+仓库也包含 [Project.code-workspace](Project.code-workspace) 和 [EIDE 配置](.eide/eide.yml)。以上构建记录对应 Keil 路线。
+
+### 首次上电与遥控
+
+1. 车轮架空、保持 K1 未使能，先用 OLED 的 `A` 和 `GY` 验证姿态。静止时 `GY` 应接近 0，缓慢前后倾动车身时 `A` 应平滑变化。更换安装位置或传感器后，按 [第 9 章](#第-9-章-调参方法与常见问题-faq) 校准。
+2. 保持闭环关闭，手转两侧轮子确认编码器反馈方向。扶稳车身并让估计角度进入 `−5° < Angle < 5°`，按下并松开 K1，PC13 LED 亮表示闭环已启用。小幅倾斜时，轮子应朝车身倾倒方向追赶。方向异常时按下并松开 K1 退出闭环，断开电机电源后检查接线与符号。
+3. 将 HC-05 设为透传模式，配对后在支持经典蓝牙 SPP 的串口助手发送 `[stop]`，OLED 底行 `R`（接收字节数）和 `C`（已解析指令数）应增加。架空联调时可发 `[F]` 做低速点动。连续移动指令、缩放和约 5 秒失联归零行为见 [第 7 章](#第-7-章-串行通信serial--hc-05)。
+
+### 来源与许可
+
+- 控制程序基于江协科技《平衡车入门教程》的「06-平衡车程序优化」工程，原理图与教学资料可从原作者页面获取。 [江协科技原教程](https://jiangxiekeji.com/tutorial/phc.html)
+- [Library](Library) 包含 STMicroelectronics STM32F10x 标准外设库 V3.5.0，[Start](Start) 包含 ST 器件支持和 Arm CMSIS Cortex-M3 文件。各文件保留原有版权和使用条款，参见 [ST 库说明](https://www.st.com/en/embedded-software/stsw-stm32054.html)及[仓库中的 CMSIS 文件头](Start/core_cm3.c)。
+- 仓库尚无统一的项目许可文件。复用或分发前，请核对各来源的授权范围。
 
 ---
 
 ## 目录
 
+- [快速开始](#快速开始)
 - [第 0 章 工程全景](#第-0-章-工程全景)
 - [第 1 章 程序骨架：main.c 逐行精讲](#第-1-章-程序骨架mainc-逐行精讲)
 - [第 2 章 PID 控制器：PID.c / PID.h](#第-2-章-pid-控制器pidc--pidh)
@@ -15,7 +82,7 @@
 - [第 4 章 执行机构：PWM / Motor / Encoder](#第-4-章-执行机构pwm--motor--encoder)
 - [第 5 章 系统节拍：Timer / Delay / 中断系统](#第-5-章-系统节拍timer--delay--中断系统)
 - [第 6 章 人机交互：Key / LED / OLED](#第-6-章-人机交互key--led--oled)
-- [第 7 章 串行通信：Serial / BlueSerial](#第-7-章-串行通信serial--blueserial)
+- [第 7 章 串行通信：Serial / HC-05](#第-7-章-串行通信serial--hc-05)
 - [第 8 章 工程组织与其它文件](#第-8-章-工程组织与其它文件)
 - [第 9 章 调参方法与常见问题 FAQ](#第-9-章-调参方法与常见问题-faq)
 - [第 10 章 思考题与进阶方向](#第-10-章-思考题与进阶方向)
@@ -86,7 +153,7 @@ HSE 外部晶振 8MHz ──×9(PLL)──▶ SYSCLK 72MHz ──▶ AHB 72MHz
 ├── Library  ST 标准外设库（stm32f10x_gpio/tim/usart/rcc... + misc.c）
 ├── User     main.c（主逻辑+中断）、PID.c/h、stm32f10x_it.c、stm32f10x_conf.h
 ├── System   Timer.c/h（TIM1 节拍）、Delay.c/h（SysTick 延时）
-└── Hardware Motor/PWM/Encoder/MPU6050/MyI2C/OLED/OLED_Data/Key/LED/Serial/BlueSerial
+└── Hardware Motor/PWM/Encoder/MPU6050/MyI2C/OLED/OLED_Data/Key/LED/Serial/HC05
 ```
 
 分层思想：`Start → Library → System → Hardware → User`，上层只调用下层接口。所有"与具体硬件接线有关"的代码被压到各模块的引脚配置函数里，换引脚只改一处。
@@ -95,31 +162,32 @@ HSE 外部晶振 8MHz ──×9(PLL)──▶ SYSCLK 72MHz ──▶ AHB 72MHz
 
 # 第 1 章 程序骨架：main.c 逐行精讲
 
-[main.c](file:///e:/BaiduNetdiskDownload/平衡车入门教程资料-江协/程序源码/程序源码-无注释版/平衡车程序/06-平衡车程序优化/User/main.c) 是全车的大脑：全局数据、PID 参数、初始化流程、主循环（显示 + 遥控解析）、以及 1kHz 中断调度中心都在这里。
+[main.c](User/main.c) 是全车的大脑：全局数据、PID 参数、初始化流程、主循环（显示 + 遥控解析）、以及 1kHz 中断调度中心都在这里。
 
 ## 1.1 头文件包含
 
 ```c
-#include "stm32f10x.h"    // 汇总了器件寄存器定义 + stm32f10x_conf.h（标准库全部头文件）
-#include "Delay.h"        // SysTick 延时（本工程 main 中未直接用，模块内部用）
-#include "OLED.h"         // OLED 驱动接口
-#include "LED.h" "Timer.h" "Key.h" "MPU6050.h" "Motor.h" "Encoder.h"
+#include "stm32f10x.h"    // 器件定义，通过 USE_STDPERIPH_DRIVER 引入标准库配置
+#include "Delay.h"
+#include "OLED.h"
+#include "LED.h"
+#include "Timer.h"
+#include "Key.h"
+#include "MPU6050.h"
+#include "Motor.h"
+#include "Encoder.h"
 #include "Serial.h"       // USART1 调试串口
-#include "BlueSerial.h"   // USART2 蓝牙
-#include "PID.h"          // PID 结构体与算法
-#include <math.h>         // atan2（姿态解算）
-#include <string.h>       // strcmp/strtok（协议解析）
-#include <stdlib.h>       // atof/atoi（字符串转数值）
+#include "HC05.h"         // USART2 遥控目标与诊断计数
+#include "PID.h"
+#include <math.h>         // atan2 姿态解算
 ```
-
-`stm32f10x.h` 顶部有 `#include "stm32f10x_conf.h"`（需定义 `USE_STDPERIPH_DRIVER`），后者把所有标准库 .h 一网打尽，所以业务代码只写一句器件头即可。
 
 ## 1.2 全局变量逐个讲清
 
 ```c
 int16_t AX, AY, AZ, GX, GY, GZ;
 ```
-MPU6050 六轴原始值。`int16_t` 是**有符号** 16 位，对应传感器输出 `(高字节<<8)|低字节` 的补码格式。以陀螺仪 ±2000°/s 量程为例，灵敏度 16.4 LSB/(°/s)：读到 +32768 表示 +2000°/s。全车只用到了 `AX、AZ（算倾角）`和 `GY（俯仰角速度）`，其余留作扩展。
+MPU6050 六轴原始值。`int16_t` 是**有符号** 16 位，对应传感器输出 `(高字节<<8)|低字节` 的补码格式。以陀螺仪 ±2000°/s 量程为例，灵敏度 16.4 LSB/(°/s)：比例换算使用满量程分母 32768，有符号原始码范围为 −32768 到 +32767。全车只用到了 `AX、AZ（算倾角）`和 `GY（俯仰角速度）`，其余留作扩展。
 
 ```c
 uint8_t TimerErrorFlag;   // 中断超时报警标志：=1 表示某次中断执行时间超过 1ms
@@ -154,35 +222,27 @@ float LeftSpeed, RightSpeed;   // 左右轮实测速度（单位见 1.6 换算�
 float AveSpeed, DifSpeed;      // 平均速度（速度环反馈）、速度差（转向环反馈）
 ```
 
-## 1.3 三个 PID 控制器的出厂参数
+## 1.3 当前固件的 PID 默认参数
 
-```c
-PID_t AnglePID = {
-    .Kp = 5,    .Ki = 0.1,  .Kd = 5,
-    .OutMax = 100,  .OutMin = -100,     // 输出限幅 = PWM 满量程
-    .OutOffset = 3,                     // 死区补偿
-    .ErrorIntMax = 600, .ErrorIntMin = -600,
-};
-```
+参数定义在 [User/main.c](User/main.c)。
 
-| 参数 | 直立环 AnglePID | 速度环 SpeedPID | 转向环 TurnPID | 含义 |
-|---|---|---|---|---|
-| Kp | 5 | 2 | 4 | 误差 → 输出的比例强度 |
-| Ki | 0.1 | 0.05 | 3 | 消除稳态误差 |
-| Kd | 5 | 0 | 0 | 直立环用"微分先行"，其余未用 |
-| Out 限幅 | ±100 | ±20 | ±50 | 速度环输出是"目标角度"（°），所以只给 ±20 |
-| 积分限幅 | ±600 | ±150 | ±20 | 积分项最大贡献 = Ki×600 = 60 PWM |
+| 参数 | 直立环 AnglePID | 速度环 SpeedPID | 转向环 TurnPID |
+|---|---:|---:|---:|
+| Kp | 2.4 | 2 | 0 |
+| Ki | 0 | 0.01 | 0 |
+| Kd | 0.6 | 0 | 1 |
+| 输出限幅 | ±100 PWM | ±30° 目标角 | ±50 差动 PWM |
+| 积分累加限幅 | ±600 | ±200 | ±20 |
+| 输出死区补偿 OutOffset | 3 | 0 | 0 |
 
-**速度环 Kd=0、转向环 Kd=0** 不是偷懒：外环周期 50ms 且反馈本身经过机械滤波，微分项只会放大噪声；而直立环 10ms 快速响应中 D 项（阻尼）必不可少。
-
-`OutMax=±20` 的物理含义：速度环最多命令直立环"目标角 ±20°"，配合主循环的 `|Angle|>50°` 保护，形成两级安全边界。
+三个环共用 [PID_Update](User/PID.c)，微分项作用在测量值的变化上。转向环默认仅启用微分项，右摇杆改变目标差速时，默认参数下目标变化不会直接改变转向输出。需要主动跟随转向目标时，按 [第 9 章](#第-9-章-调参方法与常见问题-faq) 调整转向环参数并重建。
 
 ## 1.4 初始化顺序大有讲究
 
 ```c
 OLED_Init();        // 1. 显示最先好，方便后续调试观察
 MPU6050_Init();     // 2. 传感器就绪（内部含 MyI2C_Init + 6 条配置命令）
-BlueSerial_Init();  // 3. 蓝牙：越早开越好，随时可能收到调参指令
+HC05_Init();        // 3. 初始化 USART2 遥控接口和接收状态
 LED_Init(); Key_Init(); Motor_Init(); Encoder_Init(); Serial_Init();
 
 Timer_Init();       // 4. 最后才开 1kHz 中断！
@@ -192,7 +252,7 @@ Timer_Init();       // 4. 最后才开 1kHz 中断！
 
 ## 1.5 主循环 while(1) 逐段精讲
 
-主循环承担三件事：按键启停、OLED 刷新、蓝牙协议解析。它跑得越快越好，控制本身不在这里。
+主循环负责按键启停、运行指示和 OLED 刷新。蓝牙解析和控制任务由 TIM1 中断调度。
 
 ### （1）运行指示与按键启停
 
@@ -203,10 +263,13 @@ if (KeyNum == 1)
 {
     if (RunFlag == 0)
     {
-        PID_Init(&AnglePID);   // 清 Target/Actual/ErrorInt/Out 等全部历史状态
-        PID_Init(&SpeedPID);
-        PID_Init(&TurnPID);
-        RunFlag = 1;
+        if (Angle > -5 && Angle < 5)
+        {
+            PID_Init(&AnglePID);
+            PID_Init(&SpeedPID);
+            PID_Init(&TurnPID);
+            RunFlag = 1;
+        }
     }
     else { RunFlag = 0; }
 }
@@ -222,57 +285,15 @@ OLED_Printf(0,  0, OLED_6X8, "  Angle");    // 第1列：直立环
 OLED_Printf(0,  8, OLED_6X8, "P:%05.2f", AnglePID.Kp);
 ...
 OLED_Printf(0, 48, OLED_6X8, "O:%+05.0f", AnglePID.Out);   // 输出
-OLED_Printf(0, 56, OLED_6X8, "GY:%+05d", GY);              // 原始陀螺值（看零偏）
-OLED_Printf(56,56, OLED_6X8, "Offset:%02.0f", AnglePID.OutOffset);
+OLED_Printf(0, 56, OLED_6X8, "GY:%+05d", GY);              // 扣除零偏后的读数
+OLED_Printf(50, 56, OLED_6X8, "R%04d", HC05_RxCount);
+OLED_Printf(88, 56, OLED_6X8, "C%04d", HC05_CmdCount);
 OLED_Printf(50, 0, ...  "Speed");            // 第2列：速度环（50像素起）
 OLED_Printf(88, 0, ...  "Turn");             // 第3列：转向环（88像素起）
 OLED_Update();                   // 1KB 显存经软 I2C 整屏发出
 ```
 
-`%05.2f` 表示宽度 5、不足补零、两位小数；`%+05.1f` 的 `+` 强制显示正负号，数值变化时符号位不跳动，读数更稳。这一整块界面就是**在线调参仪表盘**：手机改 PID → 屏幕立即确认写入值，屏幕同时显示 Target/Actual/Out 三要素，调参时一眼看出"误差多大、输出了多少"。
-
-> ⚠️ 性能账本：`OLED_Update()` 要通过软件 I2C 发送 8页×128字节 = 1024 字节 ≈ 9216 个 SCL 时钟+额外时序开销。按 GPIO 翻转约 0.5~1MHz 的位速率估算，一次全屏刷新要 **十几毫秒**。所以主循环实际是"几 ms 一圈"，而不是"越快越好"。好在控制都放在中断里，主循环慢一点只影响显示/响应流畅度，不影响控制稳定性——这正是中断调度的价值。
-
-### （3）蓝牙协议解析（strtok 三连）
-
-```c
-if (BlueSerial_RxFlag == 1)      // 中断收完一包 [xxx] 后置 1
-{
-    char *Tag = strtok(BlueSerial_RxPacket, ",");   // 按逗号切第一段
-```
-
-`strtok` 是 C 标准库函数：第一次调用传入字符串，后续传 `NULL` 继续切同一字符串。它会把分隔符替换成 `\0` 并返回段指针。协议三种包：
-
-**① slider 滑块（在线调参）**，格式 `[slider,AngleKp,5.5]`：
-
-```c
-char *Name  = strtok(NULL, ",");
-char *Value = strtok(NULL, ",");
-if (strcmp(Name, "AngleKp") == 0)  AnglePID.Kp  = atof(Value);
-else if (strcmp(Name, "SpeedKi") == 0) SpeedPID.Ki = atof(Value);
-...   // 共覆盖 9 个 PID 参数 + Offset（OutOffset 死区补偿）
-```
-
-`atof` 把 `"5.5"` 变成 `5.5f`。手机 App 上拖滑块 → 车上参数实时生效 → 看车况 → 再拖，这就是"在线整定"的完整闭环。
-
-**② joystick 摇杆（遥控）**，格式 `[joystick,0,50,0,0]`：
-
-```c
-int8_t LH = atoi(strtok(NULL, ","));   // 左摇杆水平 -128~127
-int8_t LV = atoi(strtok(NULL, ","));   // 左摇杆垂直
-int8_t RH = atoi(strtok(NULL, ","));   // 右摇杆水平
-int8_t RV = atoi(strtok(NULL, ","));
-SpeedPID.Target = LV / 25.0;    // 推杆最大约 ±127 → 目标速度约 ±5
-TurnPID.Target  = RH / 25.0;    // 右摇杆控制转向目标
-```
-
-`/25.0` 把摇杆刻度换算成控制器量纲。注意 `int8_t`：App 若发来 0~255 无符号值，超过 127 会变负数，遥控"半程反跳"就是这个原因。
-
-**③ key 按键包**：解析了 Name/Action 但函数体为空，属于**预留接口**（App 按钮事件）。
-
-最后 `BlueSerial_RxFlag = 0;` 允许接收下一包。
-
-> ⚠️ 数据竞争提示：中断随时可能写 `BlueSerial_RxPacket`。这里靠 `RxFlag==1 期间中断丢弃新包`（见第 7 章）保护，主循环解析期间新来的完整包会被丢掉——对遥控场景可接受，但这是"丢包保一致"的取舍，不是严格互斥。
+OLED 三列依次显示直立、速度和转向环。每列的 T、A、O 分别表示目标值、反馈值和输出。底行 GY 用于校准，R、C 用于诊断遥控，见 [第 7 章](#第-7-章-串行通信serial--hc-05)。整屏刷新通过软件 I²C 发送 1024 字节，由主循环负责。
 
 ## 1.6 中断调度中心 TIM1_UP_IRQHandler 逐行精讲
 
@@ -289,7 +310,8 @@ void TIM1_UP_IRQHandler(void)
     if (TIM_GetITStatus(TIM1, TIM_IT_Update) == SET)
     {
         TIM_ClearITPendingBit(TIM1, TIM_IT_Update);   // 尽早清标志，为下一次中断做准备
-        Key_Tick();                                    // 每 1ms 喂一次按键状态机
+        Key_Tick();                                    // 由 1ms 节拍驱动按键扫描
+        HC05_Tick();                                   // 蓝牙断句、解析和超时计时
 ```
 
 ### （1）10ms 分支：姿态解算 + 直立环（100Hz）
@@ -300,24 +322,24 @@ void TIM1_UP_IRQHandler(void)
         {
             Count0 = 0;
             MPU6050_GetData(&AX, &AY, &AZ, &GX, &GY, &GZ);   // 突发读 14 字节
-            GY -= 16;    // 陀螺零偏扣除（见下）
+            GY -= 46;    // 陀螺零偏扣除
 ```
 
-**`GY -= 16` 的来历**：±2000°/s 量程下灵敏度 16.4 LSB/(°/s)，静止时实测 GY≈+16，即约 1°/s 的零偏。若不扣，1°/s 积分到互补滤波里，10 秒就漂 10°，车必倒。这个 16 是**上电时车静止不动时实测标定**的——换传感器必须重标。
+固件扣去固定的 Y 轴陀螺仪零偏 46 LSB。静置后 OLED 的 GY 显示的是已扣除这项的读数。换传感器后，用当前扣除量加上静置时显示的平均残差，得到新的扣除量。
 
 ```c
             AngleAcc = -atan2(AX, AZ) / 3.14159 * 180;   // 加速度计解算角度
-            AngleAcc += 0.5;                             // 机械零点修正
+            AngleAcc += 1;                               // 机械零点修正
 ```
 
-`atan2(AX, AZ)` 返回重力方向与 Z 轴的夹角（弧度，±π）。车身前倾 θ 时，重力在 X 轴分量增大、Z 轴减小，`atan2(AX/AZ)` 即 θ。前面的负号来自传感器**贴装方向**（X 轴正方向与"前倾"相反）；`+0.5` 是**机械安装零点**——重心/传感器不可能绝对水平，实测静止时显示 0.5°，就直接加上去抵消。
+负号取决于传感器安装方向。随后加上当前工程的机械零点补偿 1°。重测时，在实际机械平衡位置静置，按第 9 章修正现有偏移。
 
 ```c
             AngleGyro = Angle + GY / 32768.0 * 2000 * 0.01;   // 陀螺仪积分角度
 ```
 
 逐项拆解：
-- `GY / 32768.0 * 2000`：原始值 → 角速度（°/s）。32768 是 ±2000°/s 满量程对应的码值；
+- `GY / 32768.0 * 2000`：原始值 → 角速度（°/s）。32768 是 16 位满量程换算的分母；
 - `* 0.01`：°/s × 0.01s（本周期时长 10ms）= **这 10ms 里转过的角度增量**；
 - `Angle + ...`：上一周期的融合角 + 本周期增量 = 陀螺仪口径的当前角。**积分就在这一个 `+` 号里**。
 
@@ -326,7 +348,7 @@ void TIM1_UP_IRQHandler(void)
             Angle = Alpha * AngleAcc + (1 - Alpha) * AngleGyro;   // 互补滤波
 ```
 
-一行融合两种传感器：陀螺积分（高通特性，短期准）权重 0.99，加速度计角度（低通特性，长期准）权重 0.01。等效于对陀螺做一阶高通、对加计做一阶低通再相加，时间常数 τ ≈ T×(1−α)/α ≈ 0.99s——**秒级内信陀螺，分钟级信加计**，加计的抖动被压到几乎不可见，陀螺的漂移被持续拉回。
+一行融合两种传感器：陀螺积分（高通特性，短期准）权重 0.99，加速度计角度（低通特性，长期准）权重 0.01。等效于对陀螺做一阶高通、对加计做一阶低通再相加，时间常数 τ ≈ T×(1−α)/α ≈ 0.99s——**短时主要跟随陀螺仪，长期由加速度计修正**，加计的抖动被压到几乎不可见，陀螺的漂移被持续拉回。
 
 ```c
             if (Angle > 50 || Angle < -50) { RunFlag = 0; }   // 倒地保护
@@ -341,7 +363,7 @@ void TIM1_UP_IRQHandler(void)
                 AvePWM = -AnglePID.Out;       // ← 这个负号是"符号约定"的枢纽
 ```
 
-**`AvePWM = -AnglePID.Out` 的负号**：直立环的正向误差 = "目标角 − 实际角"。假设目标 0°、实际后仰 +5°，希望电机**向后开**把车底接到重心下。而 `AnglePID.Out = Kp×(0−5) = −25`（负值），若直接送电机则车轮向前——方向反了。工程上不改传感器方向定义，就在输出处统一取负补偿。**符号问题是平衡车第一大坑**，任何一处装反（传感器方向/电机接线/编码器方向）都表现为"一启动就朝一个方向加速到倒"。
+PID 误差取目标角减实际角，电机输出再乘以 −1。这里的符号必须与 IMU 安装和电机接线配合。架空轻倾车身时，检查车轮是否朝倾倒方向追赶。
 
 ```c
                 LeftPWM  = AvePWM + DifPWM / 2;    // 差速合成
@@ -369,18 +391,22 @@ void TIM1_UP_IRQHandler(void)
 
 换算链逐项拆：
 - `Encoder_Get(n)`：50ms 内编码器计数的**增量**（含符号，四倍频计数）；
-- `/ 44.0`：输出轴转一圈的计数次数 → 得到"转了百分之几圈"；
-- `/ 0.05`：除以采样周期（秒）→ 得到 **圈/秒**；
-- `/ 9.27666`：最终标定系数，把"圈/秒"折算成控制器用的统一速度单位（与轮径、减速比相关的实测值）。
+- `/ 44.0`：按源码假定的编码器轴每圈 44 个计数换算为转数；
+- `/ 0.05`：除以采样周期，换算为编码器轴转/秒；
+- `/ 9.27666`：按源码采用的减速比，折算为电机输出轴转/秒。
 
-**44 和 9.27666 都是标定值**：让车架空、手转轮子一圈，读屏上的计数即可验证 44；9.27666 只要左右一致、标度统一即可（它会被速度环 Kp 吸收），**关键在于左右轮用同一系数**，否则走直线会跑偏。
+换电机时可用调试器核对输出轴一圈的累计计数，按实际的编码器分辨率与减速比调整换算。
 
 ```c
             AveSpeed = (LeftSpeed + RightSpeed) / 2.0;   // 平均速度 → 速度环反馈
-            DifSpeed = LeftSpeed - RightSpeed;           // 速度差   → 转向环反馈
+            DifSpeed = LeftSpeed - RightSpeed;           // 速度差 → 转向环反馈
+            if (AveSpeed > -0.2 && AveSpeed < 0.2) {AveSpeed = 0;}
+            if (DifSpeed > -0.2 && DifSpeed < 0.2) {DifSpeed = 0;}
 
             if (RunFlag)
             {
+                SpeedPID.Target = HC05_Speed;
+                TurnPID.Target = HC05_Turn;
                 SpeedPID.Actual = AveSpeed;
                 PID_Update(&SpeedPID);
                 AnglePID.Target = SpeedPID.Out;      // ★ 串级枢纽：外环输出 = 内环目标
@@ -407,13 +433,13 @@ void TIM1_UP_IRQHandler(void)
 }
 ```
 
-原理：若中断体在 1ms 内跑完，更新标志已清，不会再次 SET；若**超过 1ms**，TIM1 已再次溢出、标志再次置位——在这里被逮个正着。`TimerCount` 读的是 ARR=999 的递增计数器当前值，配合断点可换算中断执行到此刻已经过去多少 µs。这是无示波器条件下检验实时性的土办法，非常值得学习。
+原理：若中断体在 1ms 内跑完，更新标志已清，不会再次 SET；若**超过 1ms**，TIM1 已再次溢出、标志再次置位——在这里被逮个正着。`TimerCount` 是中断尾部的 0–999 计数快照，单位约 1 µs，可观察结束时间在本周期的位置。发生溢出时计数器已回卷，需要结合 `TimerErrorFlag` 判断。
 
 **中断调度全景图**：
 
 ```mermaid
 flowchart TD
-    T["TIM1 更新中断 · 每 1ms"] --> K["Key_Tick 按键扫描"]
+    T["TIM1 更新中断 · 每 1ms"] --> K["Key_Tick 按键扫描<br>HC05_Tick 解析与失联计时"]
     K --> C0{"Count0 ≥ 10 ?"}
     C0 -- "是 → 10ms 分支" --> S1["读 MPU6050 → 扣零偏<br>atan2 解算 + 互补滤波<br>±50° 倒地保护"]
     S1 --> RF{"RunFlag ?"}
@@ -431,7 +457,7 @@ flowchart TD
 
 **本章思考**：
 1. 若把 `Timer_Init()` 挪到 `MPU6050_Init()` 之前，上电会发生什么？
-2. `AngleAcc += 0.5` 里 0.5 换一辆车装配后还适用吗？怎么重新测定？
+2. `AngleAcc += 1` 的补偿换一辆车后还适用吗？怎样重新测定？
 3. 为什么停止时 `Motor_SetPWM(1, 0)` 要显式调用，而不是"不调用就不动"？（提示：上次中断留下的 PWM 是多少？）
 
 ---
@@ -440,7 +466,7 @@ flowchart TD
 
 ## 2.1 数据结构：一个 PID_t 描述一切
 
-[PID.h](file:///e:/BaiduNetdiskDownload/平衡车入门教程资料-江协/程序源码/程序源码-无注释版/平衡车程序/06-平衡车程序优化/User/PID.h) 用一个结构体把控制器全部状态打包：
+[PID.h](User/PID.h) 用一个结构体把控制器全部状态打包：
 
 ```c
 typedef struct {
@@ -518,7 +544,7 @@ void PID_Update(PID_t *p)
 
 - **积分饱和**是什么：误差长时间同号（如车被手按住），ErrorInt 一路涨。即使误差反向了，巨大的积分累积还要慢慢"泄洪"，输出迟迟回不来——车表现为"抽风几秒才稳"。
 - **限幅即抗饱和**：给 ErrorInt 设上限，超出就钳住。直立环 ±600 × Ki 0.1 = 积分项最大贡献 ±60 PWM，既有消除稳态倾斜的力量，又不会失控。
-- `Ki==0` 时干脆清零积分器：速度环若临时把 Ki 调成 0 在线测试，积分器自动归零，避免"看起来关了其实还在输出"的迷惑。
+- `Ki==0` 时干脆清零积分器：速度环若把 Ki 改为 0 后重新构建，积分器自动归零，避免"看起来关了其实还在输出"的迷惑。
 
 ### （2）微分先行：`-Kd*(Actual - Actual1)` 的深意
 
@@ -542,7 +568,7 @@ void PID_Update(PID_t *p)
 
 电机有**死区**：PWM 太小（要克服静摩擦 + 驱动管压降）轮子不动。表现为小信号时"输出 10 和输出 0 效果一样"。补偿方法：只要输出非零，就额外加（正向）或减（反向）一点，把输出"垫"过死区。`Out==0` 时不补偿——静止就是静止，不加偏置。
 
-> 注意 `OutOffset` 只对直立环有意义（默认 3），对速度环/转向环（输出是目标值而非 PWM）应为 0。
+> 注意 `OutOffset` 只对直立环有意义（默认 3），速度环和转向环当前都设为 0。
 
 ### （4）输出限幅与状态存档
 
@@ -575,7 +601,7 @@ void PID_Update(PID_t *p)
 
 ## 3.2 软件 I2C 的地基：开漏输出
 
-[MyI2C.c](file:///e:/BaiduNetdiskDownload/平衡车入门教程资料-江协/程序源码/程序源码-无注释版/平衡车程序/06-平衡车程序优化/Hardware/MyI2C.c) 使用 PB10(SCL)/PB11(SDA)，配置为**开漏输出**（GPIO_Mode_Out_OD）+ 外部上拉：
+[MyI2C.c](Hardware/MyI2C.c) 使用 PB10(SCL)/PB11(SDA)，配置为**开漏输出**（GPIO_Mode_Out_OD）+ 外部上拉：
 
 - 开漏模式只能主动输出低电平，输出"1"时引脚悬空、靠上拉电阻拉高；
 - 这实现了 I2C 的**线与**逻辑：任何一个器件拉低，总线就是低——这是 ACK、时钟拉伸、多主机仲裁的基础；
@@ -696,7 +722,7 @@ sequenceDiagram
 
 ## 3.4 MPU6050 寄存器地图
 
-[MPU6050_Reg.h](file:///e:/BaiduNetdiskDownload/平衡车入门教程资料-江协/程序源码/程序源码-无注释版/平衡车程序/06-平衡车程序优化/Hardware/MPU6050_Reg.h) 定义了本工程用到的寄存器：
+[MPU6050_Reg.h](Hardware/MPU6050_Reg.h) 定义了本工程用到的寄存器：
 
 | 地址 | 名称 | 作用 | 本工程写入值 |
 |---|---|---|---|
@@ -715,7 +741,7 @@ sequenceDiagram
 
 ## 3.5 MPU6050.c 逐函数精讲
 
-[MPU6050.c](file:///e:/BaiduNetdiskDownload/平衡车入门教程资料-江协/程序源码/程序源码-无注释版/平衡车程序/06-平衡车程序优化/Hardware/MPU6050.c) 的从机地址 `0xD0` = `1101000 << 1 | RW(0)`，即 7 位地址 0x68 + 写标志。
+[MPU6050.c](Hardware/MPU6050.c) 的从机地址 `0xD0` = `1101000 << 1 | RW(0)`，即 7 位地址 0x68 + 写标志。
 
 **指定地址写一个寄存器**：
 
@@ -817,7 +843,7 @@ Angle[k] = 0.01·AngleAcc[k] + 0.99·(Angle[k-1] + ω·T)
 
 **本章思考**：
 1. 为什么读一个寄存器要用重复起始，而不能 Stop 后重新 Start 写地址再读？
-2. 若陀螺量程改成 ±500°/s，`GY/32768*2000` 这行要怎么改？零偏 16 还成立吗？
+2. 若陀螺量程改成 ±500°/s，`GY/32768*2000` 这行要怎么改？当前硬编码零偏 46 是否需要重测？
 3. 突发读为什么"前 N−1 个 ACK、最后一个 NACK"？如果全部 NACK 会发生什么？
 
 ---
@@ -826,7 +852,7 @@ Angle[k] = 0.01·AngleAcc[k] + 0.99·(Angle[k-1] + ω·T)
 
 ## 4.1 PWM.c：20kHz 调速的诞生过程
 
-[PWM.c](file:///e:/BaiduNetdiskDownload/平衡车入门教程资料-江协/程序源码/程序源码-无注释版/平衡车程序/06-平衡车程序优化/Hardware/PWM.c) 用 TIM2 的 CH1/CH2 输出两路 PWM（PA0/PA1）。
+[PWM.c](Hardware/PWM.c) 用 TIM2 的 CH1/CH2 输出两路 PWM（PA0/PA1）。
 
 **频率计算逐步演示**：
 
@@ -850,7 +876,7 @@ PWM1 模式（`TIM_OCMode_PWM1`）：`CNT < CCR` 时输出有效电平（高）�
 
 ## 4.2 Motor.c：有符号速度 → H 桥方向 + 占空比
 
-直流电机换向靠 **H 桥**（板上驱动芯片如 TB6612/DRV8833）：IN1=1、IN2=0 正转；IN1=0、IN2=1 反转；IN1=IN2=0 滑行。PWMA/PWMB 引脚上的 PWM 决定速度。
+TB6612FNG 在 STBY 为高电平时，IN1/IN2 的互补电平选择电机驱动极性，PWMA/PWMB 控制占空比。当前工程停机时输出零占空比，在该驱动器上对应短刹。 [TB6612FNG 真值表](https://toshiba.semicon-storage.com/info/datasheet_en_20141001.pdf?did=10660)
 
 ```c
 void Motor_Init(void)
@@ -883,7 +909,7 @@ void Motor_SetPWM(uint8_t n, int8_t PWM)   // 注意入参是 int8_t：-128~127
             PWM_SetCompare1(-PWM);                 // 取负得绝对值再给 CCR
         }
     }
-    else if (n == 2) { /* 同构，Pin14/15 + CCR2 */ }
+    else if (n == 2) { /* 也取负，PB14/PB15 的驱动极性与左轮相反，PWM 用 CCR2 */ }
 }
 ```
 
@@ -966,7 +992,7 @@ int16_t Encoder_Get(uint8_t n)
 
 ## 5.1 Timer.c：1kHz 心跳
 
-[Timer.c](file:///e:/BaiduNetdiskDownload/平衡车入门教程资料-江协/程序源码/程序源码-无注释版/平衡车程序/06-平衡车程序优化/System/Timer.c) 配置高级定时器 TIM1：
+[Timer.c](System/Timer.c) 配置高级定时器 TIM1：
 
 ```
 PSC = 72-1   → 计数时钟 = 72MHz/72 = 1MHz（1µs 一格）
@@ -994,12 +1020,10 @@ NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;          // 响应 1
 | 中断 | 抢占 | 响应 | 说明 |
 |---|---|---|---|
 | USART1 | 1 | 1 | 调试串口接收 |
-| USART2 | 1 | 1 | 蓝牙接收 |
+| USART2 | 3 | 1 | 蓝牙接收 |
 | TIM1_UP | **2** | 1 | 1kHz 控制节拍 |
 
-**TIM1 的抢占数字最大 = 抢占优先级最低**，意味着串口中断可以打断 10ms 姿态计算。这是合理的：串口 ISR 只收几个字节（几 µs），打断 1ms 预算无伤；反过来若 TIM1 抢占级最高，控制中断会延迟串口接收，9600 波特率下 1ms 只有约 1 个字节的余量，容易丢字节。**短中断让长中断**是优先级设计的基本功。
-
-> 函数名 `TIM1_UP_IRQHandler` 必须与启动文件 `startup_stm32f10x_md.s` 向量表中的弱定义名字逐字一致，否则中断发生时跳到默认死循环 `B .`，现象是"程序像卡死"。
+USART1 可以打断 TIM1，TIM1 可以打断 USART2。蓝牙接收中断的抢占级较低，因而要控制 TIM1 执行时间，避免 USART2 接收处理被延迟。9600 8N1 单字节约耗时 1.04 ms，调试时可同时观察 `TimerErrorFlag` 和蓝牙收包计数。
 
 ## 5.2 Delay.c：不占用定时器外设的 SysTick 延时
 
@@ -1093,7 +1117,7 @@ void LED_OFF(void) { GPIO_SetBits(GPIOC, GPIO_Pin_13); }     // 拉高=灭
 
 ## 6.3 OLED.c：一款完整显示驱动的解剖
 
-[OLED.c](file:///e:/BaiduNetdiskDownload/平衡车入门教程资料-江协/程序源码/程序源码-无注释版/平衡车程序/06-平衡车程序优化/Hardware/OLED.c)（约 1480 行）驱动 SSD1306 控制器的 128×64 点阵屏，架构是经典的"**显存 + 绘图 API + 批量刷屏**"三层：
+[OLED.c](Hardware/OLED.c)（约 1480 行）驱动 SSD1306 控制器的 128×64 点阵屏，架构是经典的"**显存 + 绘图 API + 批量刷屏**"三层：
 
 ```
 应用层   OLED_Printf / ShowNum / DrawLine ...
@@ -1272,15 +1296,14 @@ OLED_DisplayBuf[Page + j + 1][X + i] |= Image[j * Width + i] >> (8 - Shift);  //
 
 ---
 
-# 第 7 章 串行通信：Serial / BlueSerial
+# 第 7 章 串行通信：Serial / HC-05
 
-工程里有两路几乎同构的串口驱动，职责不同：
+工程使用两路 9600 8N1 串口。
 
-| | Serial（USART1, PA9/PA10） | BlueSerial（USART2, PA2/PA3） |
+| 接口 | 引脚 | 用途 |
 |---|---|---|
-| 用途 | 调试打印（printf 重定向） | 蓝牙模块收发调参/遥控指令 |
-| 接收方式 | 单字节 + RxFlag | **状态机整包提取 `[...]`** |
-| 关键全局量 | Serial_RxData / Serial_RxFlag | BlueSerial_RxPacket[100] / BlueSerial_RxFlag |
+| [Serial.c](Hardware/Serial.c) · USART1 | PA9 TX、PA10 RX | 调试输出与单字节接收 |
+| [HC05.c](Hardware/HC05.c) · USART2 | PA2 TX、PA3 RX | 接收 HC-05 透传的遥控指令 |
 
 ## 7.1 初始化配置逐项解读
 
@@ -1295,14 +1318,14 @@ USART_InitStructure.USART_WordLength = USART_WordLength_8b;           // 8 位�
 
 即标准 **9600-8-N-1**，必须与对端（USB 转串口工具 / 蓝牙模块默认配置）完全一致。引脚方向是 USART 的固定套路：**TX 配复用推挤（AF_PP）**——数据由外设推出去；**RX 配上拉输入（IPU）**——空闲电平为高，符合 UART 空闲态。
 
-中断配置与 Timer 同款（NVIC 组 2，USART1/USART2 都在抢占 1，可打断 TIM1 控制中断，理由见 5.1）。
+NVIC 使用分组 2。USART1 抢占优先级为 1，TIM1 为 2，USART2 为 3。详细时序见第 5.1 节。
 
 ## 7.2 发送：从 SendByte 到 printf
 
 ```c
 void Serial_SendByte(uint8_t Byte)
 {
-    USART_SendData(USART1, Byte);      // 写 TDR，硬件自动移位发出
+    USART_SendData(USART1, Byte);      // 写 USART 数据寄存器，硬件自动发出
     while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET);   // 等 TXE=1
 }
 ```
@@ -1323,63 +1346,26 @@ int fputc(int ch, FILE *f)
 
 `Serial_SendNumber` 用幂取位法把 uint32 逐位转 ASCII（`%10 + '0'`），同 OLED_ShowNum 思路，不再展开。
 
-## 7.3 BlueSerial 的包接收状态机（重点）
+## 7.3 HC-05 收包与解析
 
-串口是**字节流**，没有"消息边界"。App 发的指令 `[slider,AngleKp,5.5]` 到达 MCU 时只是一个字节一个字节的中断。如何拼回"一包"？本工程用两状态状态机，以 `[` 开包、`]` 闭包：
+`USART2_IRQHandler()` 接收字节并更新 OLED 的 R 计数。`[` 开启新帧，`]`、CR 或 LF 结束当前帧。无结束符的指令在约 30 ms 接收空闲后断句。缓冲区共 32 字节，其中 1 字节留给字符串结束符。单次发送一条完整指令，给两帧留出解析间隔，避免下一帧覆盖待处理的内容。
 
-```c
-void USART2_IRQHandler(void)
-{
-    static uint8_t RxState = 0;      // 0=等包头  1=收包体
-    static uint8_t pRxPacket = 0;    // 包内写指针
-    if (USART_GetITStatus(USART2, USART_IT_RXNE) == SET)
-    {
-        uint8_t RxData = USART_ReceiveData(USART2);   // 读 DR 同时清 RXNE 标志
+TIM1 每 1 ms 调用 `HC05_Tick()`，解析完成的帧并更新超时计数。识别到有效指令后，OLED 的 C 计数递增。闭环运行时，50 ms 分支把 `HC05_Speed` 和 `HC05_Turn` 转给速度环和转向环。
 
-        if (RxState == 0)                     // 状态0：等包头
-        {
-            if (RxData == '[' && BlueSerial_RxFlag == 0)   // ★ Flag=1 期间拒绝新包
-            {
-                RxState = 1;
-                pRxPacket = 0;                // 复位写指针
-            }
-        }
-        else if (RxState == 1)                // 状态1：收包体
-        {
-            if (RxData == ']')                // 闭包
-            {
-                RxState = 0;
-                BlueSerial_RxPacket[pRxPacket] = '\0';   // 补字符串结束符
-                BlueSerial_RxFlag = 1;                   // 通知主循环
-            }
-            else
-            {
-                BlueSerial_RxPacket[pRxPacket] = RxData; // 逐字节入缓冲
-                pRxPacket ++;
-            }
-        }
-        USART_ClearITPendingBit(USART2, USART_IT_RXNE);
-    }
-}
-```
+## 7.4 指令格式与失联行为
 
-逐个设计点：
+使用经典蓝牙 SPP 串口助手发送 ASCII。下表使用方括号明确定界。数值指令中的速度、转向输入均先除以 25，再分别限幅到 ±4 转/秒和 ±5 转/秒差速。
 
-1. **`BlueSerial_RxFlag == 0` 才允许开新包**：主循环还在解析上一包时，新指令整包丢弃。牺牲实时性换**数据一致性**——比"解析到一半缓冲被覆盖"安全得多。
-2. **静默丢弃包外字符**：状态 0 下非 `[` 的字节（干扰、残包尾巴）直接忽略，天然抗噪。
-3. **隐患：无长度保护**：若发来 `[` 后没有 `]` 且长度 >100，`pRxPacket` 越界写坏相邻内存。可信环境下可接受，工程化应加 `if (pRxPacket >= 99) {RxState=0;}` 防御。改进时也可以加**包间超时**：收到 `[` 后 100ms 无 `]` 则复位状态机，防止半包卡死接收。
+| 指令示例 | 行为 |
+|---|---|
+| `[F]` / `[B]` | 前进 / 后退点动，目标速度为 +1 / −1 转/秒，转向清零 |
+| `[L]` / `[R]` | 左转 / 右转点动，差速目标为 −0.6 / +0.6 转/秒，保留当前速度 |
+| `[S]` / `[stop]` | 速度和转向目标归零 |
+| `[move,25,-15]` | 同时设平均速度 +1 转/秒、转向差速 −0.6 转/秒 |
+| `[speed,25]` / `[turn,-15]` | 只改速度 / 转向 |
+| `[joystick,0,25,-15,0]` | 第 2 个轴 LV 控制前后，第 3 个轴 RH 控制转向。左水平 LH 和右垂直 RV 留作占位 |
 
-## 7.4 主循环侧的协议落地
-
-第 1 章已详解 `strtok` 三段式解析，这里补一张协议总表：
-
-| 包格式 | 字段 | 作用 |
-|---|---|---|
-| `[slider,Name,Value]` | Name ∈ {AngleKp, AngleKi, AngleKd, SpeedKp..., TurnKd, Offset} | atof 写入对应 PID 参数 / OutOffset |
-| `[joystick,LH,LV,RH,RV]` | 四个 int8 摇杆值 | SpeedPID.Target = LV/25；TurnPID.Target = RH/25 |
-| `[key,Name,Action]` | 预留 | 函数体为空，待扩展 |
-
-`BlueSerial_Printf("[plot,%f,%f,%f]", ...)` 被注释的那行：原本把三个积分器值发回上位机画曲线——**PID 调参的"示波器"**。建议调参阶段打开它，配合 VOFA+ 等上位机看 ErrorInt 的收敛情况。
+点动约 500 ms 后归零。连续命令约 5 秒收不到有效指令时，固件将速度和转向目标归零。闭环仍运行，电机仍可能为保持平衡输出。需要退出闭环时，按下并松开 K1。固件的 PID 参数通过修改 [User/main.c](User/main.c) 后重建和烧录。
 
 ---
 
@@ -1387,7 +1373,7 @@ void USART2_IRQHandler(void)
 
 ## 8.1 stm32f10x_it.c：空的中断模板
 
-此文件只包含系统异常（NMI/HardFault 等）的空模板。**本工程的中断服务函数写在了各自相关文件里**（TIM1_UP_IRQHandler 在 main.c、USART1_IRQHandler 在 Serial.c、USART2_IRQHandler 在 BlueSerial.c）——C 语言的链接器只关心全局符号名，不关心函数写在哪个 .c 文件，只要与启动文件向量表里的弱符号名一致即可覆盖。这种"ISR 跟着模块走"的组织方式让每个驱动自包含。
+此文件只包含系统异常（NMI/HardFault 等）的空模板。**本工程的中断服务函数写在了各自相关文件里**（TIM1_UP_IRQHandler 在 main.c、USART1_IRQHandler 在 Serial.c、USART2_IRQHandler 在 HC05.c）——C 语言的链接器只关心全局符号名，不关心函数写在哪个 .c 文件，只要与启动文件向量表里的弱符号名一致即可覆盖。这种"ISR 跟着模块走"的组织方式让每个驱动自包含。
 
 ## 8.2 头文件的组织规则
 
@@ -1424,50 +1410,40 @@ void PID_Update(PID_t *p);
 
 # 第 9 章 调参方法与常见问题 FAQ
 
-## 9.1 调参顺序（血泪总结）
+## 9.1 校准与调参顺序
 
-**第 0 步：静态验证（车架空，RunFlag=0）**
-- 屏上 GY 读数：静止时应约 ±5 以内，否则改 `GY -= 16` 零偏；
-- 手倾车身：Angle 应平滑跟随、方向正确（前倾为正还是负要与代码约定一致）；
-- 手转轮子：AveSpeed/DifSpeed 变化正确，同转应只动 AveSpeed。
+1. **先看反馈。** 轮子架空且闭环关闭，静置观察 OLED 的 GY，取一段时间的平均残差。将 [User/main.c](User/main.c) 中的 `GY -= 46` 扣除量改为旧值加该残差。扶稳车身于实际机械平衡位置，待读数稳定后，用 `AngleAcc` 的原有补偿减去 OLED 的 A 值，得到新补偿。
+2. **先调直立环。** 在源码中暂将速度环、转向环增益设为零，直立环先保留 `Ki = 0`。重建、烧录并架空确认符号正确。再扶车短时试验，每次只小幅调整一个参数。先找合适的比例恢复力度，再调微分改善抖动。
+3. **再调速度环。** 恢复速度环并从小增益开始。用短距离、低速指令确认前后目标与实际响应一致，再看回中后能否逐步收住速度。速度环输出是直立环的目标角。
+4. **最后调转向环。** 默认 `Kp = Ki = 0`、`Kd = 1`，只对实测差速变化产生微分输出。需要跟随右摇杆目标时，核对两轮符号后逐步加入少量比例增益，再用小转向命令验证。
 
-**第 1 步：只调直立环（Ki=Ki=0.1 先置 0，速度环/转向环不启用）**
-1. 增大 Kp 到车微微低频晃动 → 回退到 60%；
-2. 增大 Kd 阻尼高频抖动，到车"稳如被手扶"；
-3. 最后加小 Ki 消除缓慢漂移（Ki 过大又会低频摇摆）。
-
-**第 2 步：合上速度环**
-- Kp 从小加起：响应是"推车它顶回来"；过大表现为前后大幅慢摆；
-- Ki 消除缓慢匀速漂移（受地面坡度/死区影响）。
-
-**第 3 步：转向环**：Kp 决定转向跟随快慢，Ki 决定能否走直线。
-
-**每一步都用蓝牙 slider 在线改参数 + OLED 三列仪表观察**，这就是这套程序调试架构的价值。
+每次改动后重新编译和烧录，并用 OLED 对比目标、反馈和输出。发现车轮方向异常、输出持续饱和或振荡增大时，退出闭环并回查接线、校准及增益。
 
 ## 9.2 症状速查表
 
-| 症状 | 可能原因 | 处置 |
-|---|---|---|
-| 一启动就朝一个方向冲刺到倒 | 电机/传感器/编码器任一符号反了 | 核对 `AvePWM=-Out`、`PWM=-PWM`、GY 方向 |
-| 静止时 Angle 缓慢单向漂 | 陀螺零偏变了 | 重标 `GY-=16`（或上电自动校准） |
-| 静止时 Angle 有固定小偏差 | 机械安装不水平 | 调 `AngleAcc += 0.5` 机械零点 |
-| 高频嘶嘶抖 | 直立环 Kp 过大 / Kd 不足 | 降 Kp 或升 Kd |
-| 低频大幅摇摆 | 速度环 Kp 过大或直立环 Ki 过大 | 减小相应参数 |
-| 起步猛窜一下 | 没清积分器 / Target 残留 | 确认启动前 `PID_Init` 三个环 |
-| 小信号不动、加一点又太猛 | 电机死区 | 调 `OutOffset`（先小后大） |
-| OLED 不亮/花屏 | 充电泵未开 / I2C 上拉缺失 / 供电不足 | 核对 0x8D 0x14、4.7k 上拉、独立 3.3V |
-| 蓝牙收不到 | 波特率不符 / TX-RX 未交叉 / 括号包格式错 | 9600、TX↔RX 对调、`[...]` 格式 |
-| 遥控半程就反向 | App 发 0~255 而 int8_t 解析 | 上位机改发 -128~127 |
-| 中断偶发超时 | OLED/调试打印混入中断 | `TimerErrorFlag` 定位，重活移回主循环 |
+| 症状 | 排查方法 |
+|---|---|
+| K1 松开后 LED 不亮 | 看 OLED 的 A 是否严格在 −5° 和 +5° 之间，确认 PB1 按下时接地 |
+| 闭环一开就朝一个方向加速 | 架空核对 IMU 的倾角方向、两轮转向和编码器符号 |
+| 静止时 GY 有残差或 A 有固定偏差 | 按第 9.1 节分别校准陀螺零偏和机械零点 |
+| 小输出轮子不动 | 检查 STBY、VM 以及直立环 `OutOffset` |
+| OLED 不亮或花屏 | 核对 3.3 V、PB8/PB9、I²C 上拉和 OLED 地址 0x3C |
+| 蓝牙已连接，OLED 的 R 不增加 | 核对 HC-05 TXD→PA3、RXD←PA2、共地及 9600 8N1 |
+| R 增加，C 不增加 | 用 `[stop]` 验证 ASCII 格式和帧边界 |
+| R、C 都增加，右摇杆目标变化但差动输出接近零 | 检查转向环默认 Kp、Ki 和实测差速变化 |
+| 串口接收不稳且 `TimerErrorFlag` 置位 | 检查 TIM1 执行时间，把新增耗时操作移出中断 |
+| 电机一动，主控复位 | 检查 VM 和 3.3 V 电源压降、共地及电机电流回路 |
 
 ## 9.3 实时性账本（中断预算 1ms）
+
+下表是代码级估算。实际占用需要用示波器或逻辑分析仪测量。
 
 | 操作 | 耗时量级 |
 |---|---|
 | MPU6050 突发读 14 字节（软 I2C） | ~200-400µs（大头） |
 | PID×3 + 角度解算（含 atan2） | ~几十 µs |
 | Encoder_Get ×2 | <2µs |
-| 全部 1ms 分支（Key_Tick 等） | <5µs |
+| 按键扫描与蓝牙维护 | 蓝牙帧解析耗时随指令变化 |
 
 10ms 分支合计约 0.3~0.5ms，预算内但**不宽裕**——若把 OLED_Update（~10ms）放进去必然超时，这就是它待在主循环的原因。想缩短：给 MPU6050 换硬件 I2C 或提高软 I2C 速率。
 
@@ -1478,29 +1454,29 @@ void PID_Update(PID_t *p);
 ## 10.1 各章思考题汇总
 
 1. （第1章）`Timer_Init` 提前会怎样？——中断读未初始化外设，I2C 卡死/垃圾数据。
-2. （第1章）机械零点 0.5 如何重测？——静止放平，读 Angle 显示值，把它的相反数加进 `AngleAcc +=`。
+2. （第1章）机械零点如何重测？——扶稳在机械平衡位置，稳定后读 OLED 的 A，新补偿取旧补偿减去 A。
 3. （第2章）为什么直立环必须 D 项而速度环可以不要？——内环对象快且欠阻尼需微分镇定；外环 50ms+机械惯性本身即滤波。
 4. （第3章）重复起始的必要性？——读写切换期间必须保持总线控制权与寄存器指针。
 5. （第4章）编码器 ARR 为什么是 65535 而不是更小？——用满 16 位 + int16 补码天然处理回绕符号。
-6. （第5章）串口抢占级为何高于 TIM1？——串口 ISR 极短、字节到达不可延迟；控制环可容忍 µs 级抖动。
+6. （第5章）USART1 和 USART2 分别如何与 TIM1 抢占？——USART1 可打断 TIM1，USART2 需等 TIM1 返回。
 7. （第6章）释放沿 vs 按下沿触发的体验差异？——释放沿有"确认感"，长按不重复。
-8. （第7章）状态机丢包保护的代价？——解析期新指令被丢；改进：双缓冲或 DMA 环形队列。
+8. （第7章）为什么发送端要给两帧留出间隔？——接收使用单缓冲，下一帧到来时可能覆盖尚未被取走的前一帧。
 
 ## 10.2 进阶改造路线
 
-1. **上电自动陀螺零偏校准**：上电静置采 1s 平均 GY 替代硬编码 16；
+1. **上电自动陀螺零偏校准**：上电静置采 1s 平均 GY 替代硬编码 46；
 2. **卡尔曼滤波**替代互补滤波（把 α 换成随角速度自适应的增益）；
 3. **速度环前馈 + 低通**：编码器速度先过一阶低通再进 PID，抑制量化噪声；
 4. **DMP 硬件解算**：MPU6050 内置 DMP 直接输出四元数，省掉 MCU 上的滤波计算；
 5. **串口 DMA + 空闲中断**收包，替代逐字节中断，接收零 CPU 占用；
 6. **看门狗**：IWDG 由控制中断喂狗，程序跑飞自动复位站立保护；
-7. **参数掉电保存**：调好的 PID 存入 Flash/BKP 备份域，免每次手机重调。
+7. **参数掉电保存**：调好的 PID 存入 Flash/BKP 备份域，便于恢复已验证的参数。
 
 ---
 
 # 附录 A 引脚分配总表
 
-见 0.2 节表格（此处不重复）。补充电源要点：电机驱动必须**独立供电或大电容缓冲**，电机堵转电流会把 3.3V 拉垮导致 MCU 复位——表现为"一动就重启"。
+见 [物料与接线](#物料与接线)。
 
 # 附录 B 全局符号速查表
 
@@ -1515,7 +1491,8 @@ void PID_Update(PID_t *p);
 | TimerErrorFlag / TimerCount | — | main.c | 中断超时调试 |
 | OLED_DisplayBuf[8][128] | uint8_t | OLED.c | OLED 显存 |
 | Key_Num | uint8_t | Key.c | 按键事件暂存 |
-| BlueSerial_RxPacket / RxFlag | — | BlueSerial.c | 蓝牙包缓冲与就绪标志 |
+| HC05_Speed / HC05_Turn | volatile float | HC05.c | 蓝牙速度与差速目标 |
+| HC05_RxCount / HC05_CmdCount | volatile uint16_t | HC05.c | 接收字节数与解析成功指令数 |
 | Serial_RxData / RxFlag | — | Serial.c | 调试串口单字节接收 |
 
 ---
